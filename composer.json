@@ -25,7 +25,8 @@
         "imagine/imagine": "^1.2",
         "chrisjean/php-ico": "^1.0",
         "symfony/yaml": "^4.4",
-        "scssphp/scssphp": "^1.0"
+        "scssphp/scssphp": "^1.0",
+        "ext-dom": "*"
     },
     "autoload": {
         "psr-4": {
