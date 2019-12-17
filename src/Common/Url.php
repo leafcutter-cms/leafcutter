@@ -65,7 +65,7 @@ class Url implements UrlInterface
             $parts['filename'] = '';
         } else {
             $parts['context'] = $parts['context'] ?? dirname($parts['path']).'/';
-            if ($parts['context'] == '\\/') {
+            if ($parts['context'] == '\\/' || $parts['context'] == '//') {
                 $parts['context'] = '/';
             }
             $parts['filename'] = basename($parts['path']);
