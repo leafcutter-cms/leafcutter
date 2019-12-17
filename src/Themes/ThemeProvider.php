@@ -212,7 +212,7 @@ class ThemeProvider
             $html[] = $this->jsHtml($this->filter('js', $m, false));
             $html[] = $this->jsHtml($this->filter('js', $m, true));
         }
-        return implode("\n", array_filter($html));
+        return implode(PHP_EOL, array_filter($html));
     }
 
     protected function filter(string $type, string $media=null, bool $async=null)
@@ -248,9 +248,9 @@ class ThemeProvider
                 if ($e['source'] instanceof AssetInterface) {
                     if ($e['media'] != 'library' && $this->inlined+$e['source']->getFilesize() <= $this->leafcutter->config('css.max_inlined')) {
                         $this->inlined += $e['source']->getFilesize();
-                        $e = '<style type="text/css"'.$media.'>'."\n"
+                        $e = '<style type="text/css"'.$media.'>'.PHP_EOL
                             .$e['source']->getContent()
-                            ."\n</style>";
+                            .PHP_EOL."</style>";
                         return;
                     }
                     $source = $e['source']->getOutputUrl();
@@ -264,7 +264,7 @@ class ThemeProvider
                     .' />';
             }
         );
-        return implode("\n", $arr);
+        return implode(PHP_EOL, $arr);
     }
 
     protected function jsHtml($arr) : string
@@ -290,7 +290,7 @@ class ThemeProvider
                     .'></script>';
             }
         );
-        return implode("\n", $arr);
+        return implode(PHP_EOL, $arr);
     }
 
     protected function bundle_assets($arr, $ext)
@@ -327,7 +327,7 @@ class ThemeProvider
                         $content[] = ';';
                     }
                 }
-                $content = implode("\n", $content);
+                $content = implode(PHP_EOL, $content);
                 $filename = $e['media'].'-'.hash('crc32', $content).'.'.$ext;
                 $bundled["bundle $k: $filename"] = [
                     'source' => $this->leafcutter->assets()->getFromString('/~themes/'.$filename, $content),
