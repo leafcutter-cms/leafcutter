@@ -87,7 +87,7 @@ class DOMProvider
         }
         //dispatch event if necessary
         if ($eventName) {
-            $event = $this->leafcutter->hooks()->dispatchEvent($eventName, new DomEvent($node));
+            $event = $this->leafcutter->hooks()->dispatchEvent($eventName, new DOMEvent($node));
             //do deletion if event calls for it
             if ($event->getDelete()) {
                 $node->parentNode->removeChild($node);

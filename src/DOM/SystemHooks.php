@@ -94,10 +94,10 @@ class SystemHooks
     /**
      * Attempts to create good/proper links to existing pages/assets
      *
-     * @param DomEvent $event
+     * @param DOMEvent $event
      * @return void
      */
-    public function onDOMElement_a(DomEvent $event)
+    public function onDOMElement_a(DOMEvent $event)
     {
         //verify that anchor has an href
         $a = $event->getNode();
