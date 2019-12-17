@@ -1,0 +1,22 @@
+<!doctype html>
+<html class="{% block html_classes %}{% endblock %}" data-context-path="/">
+    <head>
+
+<title>
+{% block title %}{% include "leafcutter/html_title.twig" %}{% endblock %}
+</title>
+
+{% block head %}{% include "leafcutter/html_head.twig" %}{% endblock %}
+
+    </head>
+    <body class="{% block body_classes %}{% endblock %}">
+        <div id="main-wrapper">
+
+{% block header %}{% include "blocks/header.twig" %}{% endblock %}
+{% block navigation %}{% include "blocks/navigation.twig" %}{% endblock %}
+{% block main %}{% include "blocks/main.twig" %}{% endblock %}
+{% block footer %}{% include "blocks/footer.twig" %}{% endblock %}
+
+        </div>
+    </body>
+</html>

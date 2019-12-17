@@ -1,0 +1,23 @@
+advanced:
+  fontawesome-css:
+    type: css
+    media: library
+    url: /~themes/leafcutter/fontawesome/css/all.min.css
+  zepto:
+    type: js
+    media: library
+    url: /~themes/leafcutter/zepto/zepto.min.js
+  zepto-fx:
+    type: js
+    media: library
+    url: /~themes/leafcutter/zepto/fx.js
+
+css:
+  library:
+    - library.scss
+  blocking:
+    - blocking.scss
+
+js:
+  library:
+    - leafcutter/lightbox.js

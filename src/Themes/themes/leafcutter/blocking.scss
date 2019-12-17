@@ -1,0 +1,88 @@
+@import "mixins/colors.scss";
+@import "mixins/sizing.scss";
+.breadcrumb {
+    .breadcrumb-item {
+        &:after {
+            @include font-size-xsmaller;
+            @include text-muted;
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            content: ' \f101 ';
+            display: inline;
+        }
+        &:last-child:after {
+            display: none;
+        }
+    }
+}
+
+.leafcutterGallery {
+    display: flex;
+    flex-wrap: wrap;
+    @include margin-y;
+    .leafcutterThumbnail {
+        display: inline-block;
+        max-width: 50%;
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+    }
+}
+
+#lightbox {
+    display: none;
+}
+
+.spinner {
+    display: inline-block;
+    line-height: 1;
+    &:after {
+        content: "\f1ce";
+        display: inline-block;
+        line-height: 1em;
+        animation-name: loading-spinner;
+        animation-duration: 2000ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+    }
+}
+
+@-ms-keyframes loading-spinner {
+    from {
+        -ms-transform: rotate(0deg);
+    }
+    to {
+        -ms-transform: rotate(360deg);
+    }
+}
+
+@-moz-keyframes loading-spinner {
+    from {
+        -moz-transform: rotate(0deg);
+    }
+    to {
+        -moz-transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes loading-spinner {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes loading-spinner {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
