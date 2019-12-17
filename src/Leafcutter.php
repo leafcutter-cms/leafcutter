@@ -26,7 +26,7 @@ class Leafcutter
         $this->content = new Content\ContentProvider($this);
         $this->pages = new Content\Pages\PageProvider($this);
         $this->assets = new Content\Assets\AssetProvider($this);
-        $this->dom = new Dom\DOMProvider($this);
+        $this->dom = new DOM\DOMProvider($this);
         $this->themes = new Themes\ThemeProvider($this);
         $this->templates = new Templates\TemplateProvider($this);
         $this->images = new Content\Images\ImageProvider($this);
