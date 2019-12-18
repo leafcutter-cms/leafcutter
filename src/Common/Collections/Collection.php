@@ -70,6 +70,9 @@ class Collection implements CollectionInterface
 
     protected function doSort()
     {
+        if ($this->sorted) {
+            return;
+        }
         usort(
             $this->items,
             [$this,'itemcmp']

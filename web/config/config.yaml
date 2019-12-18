@@ -1,0 +1,38 @@
+# Site information for templating
+site:
+  name: Example Site
+
+# Controls for asset generation
+assets:
+  # directory for assets to be saved in, must have trailing slash
+  output_directory: ${base_dir}/assets/
+  # the URL of that asset, must have leading/trailing slashes
+  output_context: /assets/
+  # base URL, if assets are going to be served from another domain
+  output_base: null
+
+# Controls for JS optimization
+js:
+  minify: true # whether JS should be minified
+  bundle: true # whether JS files should be bundled
+
+# Set an image driver
+# gd is the default because it's available almost everywhere
+# imagick or gmagick is preferred, because they're much faster
+images:
+  driver: gd
+
+# controls for CSS optimization
+css:
+  minify: true # whether CSS should be minified
+  bundle: true # whether CSS files should be bundled
+  max_inlined: 51200 # the maximum amount of CSS that can be inlined
+
+# caching settings
+# these only do anything meaningful if there's a persistent cache
+cache:
+  ttl:
+    handle_request: 5 # time a given top-level response should be cached
+    content_provider: 5 # time to cache results from content filesystem
+    asset_provider: 5 # time to cache asset output (image manipulations are cached essentially forever, regardless of this setting)
+    dom_provider: 5 # time to cache DOM preprocessing results

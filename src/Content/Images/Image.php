@@ -17,6 +17,16 @@ class Image implements CollectableInterface
         $this->leafcutter = $leafcutter;
     }
 
+    public function getDateModified() : int
+    {
+        return $this->default()->getDateModified();
+    }
+
+    public function getName() : string
+    {
+        return $this->default()->getName();
+    }
+
     public function getHash() : string
     {
         return hash('crc32', $this->path);

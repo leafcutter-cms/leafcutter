@@ -1,6 +1,7 @@
 /vendor/
 /composer.lock
 *.ignore
+
 /web/assets
-/leafcutter.log
-/cache
+/web/cache
+/web/leafcutter.log
