@@ -23,6 +23,11 @@ class StringAsset extends AbstractAsset
         }
     }
 
+    public function getOutputFile() : string
+    {
+        return $this->outputFile;
+    }
+
     public function getFilesize() : int
     {
         return strlen($this->content);

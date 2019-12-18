@@ -66,6 +66,36 @@ class ThemeProvider
         }
     }
 
+    public function onPrefixedContentList_themes($globs)
+    {
+        $files = [];
+        foreach ($this->sourceDirectories() as $dir) {
+            foreach ($globs as $glob) {
+                $glob = "$dir$glob";
+                foreach (glob($glob, GLOB_BRACE) as $match) {
+                    $path = $this->normalizePath($match);
+                    $files[$path] = @$files[$path] ?? $match;
+                }
+            }
+        }
+        return $files;
+    }
+
+    protected function normalizePath(string $path) : string
+    {
+        foreach ($this->sourceDirectories() as $dir) {
+            if (strpos($path, $dir) === 0) {
+                $path = substr($path, strlen($dir));
+                break;
+            }
+        }
+        if (substr($path, 0, 1) != '/') {
+            $path = "/$path";
+        }
+        $path = preg_replace('@/(_|[0-9]{1,3}\. )@', '/', $path);
+        return "/~themes$path";
+    }
+
     public function onPrefixedAssetGet_themes($url)
     {
         foreach ($this->sourceDirectories() as $dir) {

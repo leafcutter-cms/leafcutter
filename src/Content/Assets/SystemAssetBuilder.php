@@ -41,6 +41,13 @@ class SystemAssetBuilder
         }
         $compiler->setImportPaths($dirs);
         $compiler->addImportPath(function ($path) use ($url) {
+            // try to include a raw scss file if possible
+            if (strtolower(substr($path, -5)) == '.scss') {
+                if ($files = $this->leafcutter->content()->list($path)) {
+                    return reset($files);
+                }
+            }
+            // try to include an asset
             $asset = $this->leafcutter->assets()->get($path, $url);
             if ($asset) {
                 return $asset->getOutputFile();

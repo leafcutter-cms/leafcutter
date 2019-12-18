@@ -75,6 +75,15 @@ class ContentProvider
         return $this->cache->get(
             'list.'.hash('crc32', serialize([$glob,$listed])),
             function () use ($glob,$listed) {
+                if (preg_match('@^/~([a-zA-Z0-9]+)/@', $glob, $matches)) {
+                    $prefix = $matches[1];
+                    $glob = substr($glob, strlen($prefix)+2);
+                    $result = $this->leafcutter->hooks()->dispatchFirst(
+                        'onPrefixedContentList_'.$prefix,
+                        $this->pathToGlobs($glob)
+                    );
+                    return $result ?? [];
+                }
                 $list = $this->listFiles($this->pathToGlobs($glob));
                 if ($listed) {
                     $list = array_filter(
