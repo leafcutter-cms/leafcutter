@@ -201,7 +201,7 @@ class PageProvider
         // run hooks to allow further modification of pages
         $page = $this->leafcutter->hooks()->dispatchAll('onPageReady', $page);
         // extract metadata
-
+        // TODO: does this belong here?
         // return
         return $page;
     }

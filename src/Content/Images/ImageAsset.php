@@ -7,5 +7,4 @@ class ImageAsset extends \Leafcutter\Content\Assets\CallbackAsset
     {
         return '<img src="'.$this->getUrl().'" alt="'.$this->getName().'" />';
     }
-
 }

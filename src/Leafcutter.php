@@ -108,8 +108,9 @@ class Leafcutter
 
     public function handleRequest(Request $request) : Response
     {
+        $hash = $this->content()->hash($request->getFullContext());
         return $this->cache->get(
-            'handleRequest.'.hash('crc32', serialize($request)),
+            'handleRequest.'.hash('crc32', serialize([$request,$hash])),
             function () use ($request) {
                 $response = Response::createFrom($request);
                 try {

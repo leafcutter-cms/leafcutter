@@ -34,6 +34,37 @@ class ContentProvider
         );
     }
 
+    /**
+     * Hash the file list and modification times of all files represented
+     * by a glob, and all neighbors and children of the directory.
+     *
+     * @param string $glob
+     * @param boolean $listed
+     * @return string
+     */
+    public function hash(string $glob) : string
+    {
+        if (substr($glob, -1) == '/') {
+            $glob .= '*';
+        }
+        return $this->cache->get(
+            'list.'.hash('crc32', $glob),
+            function () use ($glob) {
+                $hash = '';
+                foreach ($this->list($glob) as $path => $file) {
+                    if (!file_exists($file)) {
+                        continue;
+                    }
+                    $hash .= filemtime($file);
+                    if (is_dir($file)) {
+                        $hash .= $this->hash("$path/*");
+                    }
+                }
+                return hash('crc32', $hash);
+            }
+        );
+    }
+
     public function listDirs(string $glob, bool $listed=false) : array
     {
         return array_filter($this->list($glob, $listed), '\\is_dir');
@@ -161,7 +192,7 @@ class ContentProvider
             $current = array_shift($chunks);
         }
         if (!count($chunks)) {
-            return $current;
+            return $current ?? [];
         }
         $out = [];
         foreach (array_shift($chunks)??[] as $a) {

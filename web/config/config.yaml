@@ -21,6 +21,7 @@ js:
 # imagick or gmagick is preferred, because they're much faster
 images:
   driver: gd
+  # driver: imagick
 
 # controls for CSS optimization
 css:
@@ -32,7 +33,30 @@ css:
 # these only do anything meaningful if there's a persistent cache
 cache:
   ttl:
-    handle_request: 5 # time a given top-level response should be cached
-    content_provider: 5 # time to cache results from content filesystem
-    asset_provider: 5 # time to cache asset output (image manipulations are cached essentially forever, regardless of this setting)
-    dom_provider: 5 # time to cache DOM preprocessing results
+    # Time a given top-level response should be cached.
+    # Request handling is cached based on URL and a recursive hash of the content
+    # files/folders in that URL's source content directories.
+    # This means you can safely make this TTL very high. It might take this long
+    # for CSS/JS asset changes to ripple out, but content changes will invalidate
+    # this cache much quicker based on the content_provider TTL.
+    handle_request: 86400
+    # Time to cache the results of queries to the source content filesystem.
+    # A lot is based on this, but all its calls happen relatively fast. It's also
+    # the source of cache invalidation for a lot of things higher up the chain.
+    # Thus, it should be pretty short, like under a minute in most cases.
+    # You'll have to wait at least up to this long for changes to content to
+    # take effect on the site.
+    content_provider: 30
+    # The amount of time to cache asset preparation output. This mostly impacts
+    # how frequently CSS/JS assets are recompiled. Since CSS/JS compilation and
+    # minification are generally relatively fast, it's safe to make this fairly short.
+    # You'll have to wait at least this long for changes to CSS/JS to make it
+    # up onto the site.
+    # Note that image manipulations are cached basically forever. If you want to
+    # rebuilt image manipulations the only real option is to clear out your
+    # asset output directory.
+    asset_provider: 30
+    # Time to cache DOM preprocessing results. This operation is relatively quick,
+    # but also the output should be pretty stable depending on the given input.
+    # A middle ground of a few minutes is reasonable for most sites.
+    dom_provider: 300
