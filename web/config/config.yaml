@@ -60,3 +60,8 @@ cache:
     # but also the output should be pretty stable depending on the given input.
     # A middle ground of a few minutes is reasonable for most sites.
     dom_provider: 300
+
+# This isn't actually a super-optimal way to change to dark mode, but it works if
+# you know you'll always use it on every page it's a very simple way to do it.
+# theme_variables:
+#   body_class: colors-dark

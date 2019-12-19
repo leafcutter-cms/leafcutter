@@ -39,6 +39,7 @@ class ThemeProvider
     ];
     protected $inlined = 0;
     protected $loadedThemes = [];
+    protected $bodyClasses = [];
 
     public function __construct(Leafcutter $leafcutter)
     {
@@ -51,6 +52,15 @@ class ThemeProvider
     public function variables() : Variables
     {
         return $this->variables;
+    }
+
+    public function getBodyClass() : string
+    {
+        $classes = $this->bodyClasses;
+        if ($this->variables()->get('body_class')) {
+            $classes[] = $this->variables()->get('body_class');
+        }
+        return implode(' ', $classes);
     }
 
     public function loadTheme(string $name)

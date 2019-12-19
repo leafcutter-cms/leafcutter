@@ -33,6 +33,16 @@ margin/padding
     @include margin-y;
 }
 
+@mixin margin-block {
+    @include margin-y;
+    &:first-child {
+        margin-top:0;
+    }
+    &:last-child {
+        margin-bottom:0;
+    }
+}
+
 @mixin padding-l {
     padding-left: $padding;
 }

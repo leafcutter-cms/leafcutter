@@ -15,6 +15,7 @@ class Leafcutter
     protected $assets;
     protected $themes;
     protected $templates;
+    protected $confHash = '00000000';
 
     public function __construct(Config\Config $config)
     {
@@ -30,6 +31,18 @@ class Leafcutter
         $this->themes = new Themes\ThemeProvider($this);
         $this->templates = new Templates\TemplateProvider($this);
         $this->images = new Content\Images\ImageProvider($this);
+        $this->mutateHash($this->config);
+        $this->mutateHash(filemtime(__DIR__));
+    }
+
+    public function mutateHash($input)
+    {
+        $this->confHash = hash('crc32', $this->confHash.serialize($input));
+    }
+
+    public function hash() : string
+    {
+        return $this->confHash;
     }
 
     public function images() : Content\Images\ImageProvider

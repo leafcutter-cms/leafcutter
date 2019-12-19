@@ -2,4 +2,4 @@
 
 The requested page could not be found.
 
-> {{error_message}}
+> {error_message}

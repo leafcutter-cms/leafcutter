@@ -1,5 +1,5 @@
-# Error {{error_code}}
+# Error {error_code}
 
-> {{error_message}}
+> {error_message}
 
 This status code doesn't have a page specified to provide any additional information.

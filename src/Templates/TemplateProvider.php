@@ -64,7 +64,7 @@ class TemplateProvider
             return $this->twig()->render($name, $parameters);
         } catch (\Throwable $th) {
             $this->leafcutter->logger()->error('TemplateProvider: apply: Exception: '.$th->getMessage());
-            return "[an error occurred while applying template]";
+            return "[an error occurred while applying template: <code>".$th->getMessage()."</code>]";
         }
     }
 

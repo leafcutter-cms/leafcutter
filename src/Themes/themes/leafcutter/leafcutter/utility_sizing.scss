@@ -86,6 +86,10 @@
     @include margin;
 }
 
+.margin-block {
+    @include margin-block;
+}
+
 .padding-l {
     @include padding-l;
 }

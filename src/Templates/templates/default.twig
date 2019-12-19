@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="{% block html_classes %}{% endblock %}" data-context-path="/">
+<html data-context-path="/">
     <head>
 
 <title>
@@ -9,7 +9,7 @@
 {% block head %}{% include "leafcutter/html_head.twig" %}{% endblock %}
 
     </head>
-    <body class="{% block body_classes %}{% endblock %}">
+    <body class="{{themes.getBodyClass}} {% block bodyclass %}{% endblock %}">
         <div id="main-wrapper">
 
 {% block header %}{% include "blocks/header.twig" %}{% endblock %}

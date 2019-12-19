@@ -123,8 +123,8 @@ class PageProvider
         $originalCode = $originalCode ?? $code;
         $path = "{$context}_error_{$code}/";
         if ($page = $this->get($path)) {
-            $page->setContent(str_replace('{{error_message}}', $message, $page->getContent()));
-            $page->setContent(str_replace('{{error_code}}', $originalCode, $page->getContent()));
+            $page->setContent(str_replace('{error_message}', $message, $page->getContent()));
+            $page->setContent(str_replace('{error_code}', $originalCode, $page->getContent()));
             return $page;
         }
         $newContext = preg_replace('@[^/]+/$@', '', $context);

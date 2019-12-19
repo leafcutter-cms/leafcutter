@@ -64,6 +64,7 @@ class CacheProvider implements \Leafcutter\Cache\CacheInterface
         if ($ttl === null) {
             $ttl = null;
         }
+        $key.= '.'.$this->leafcutter->hash();
         return $this->cache->get($key, function (ItemInterface $item) use ($key,$callback,$tags,$ttl) {
             $value = call_user_func($callback);
 

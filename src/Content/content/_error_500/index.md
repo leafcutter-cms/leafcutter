@@ -2,4 +2,4 @@
 
 A server error occurred.
 
-> {{error_message}}
+> {error_message}

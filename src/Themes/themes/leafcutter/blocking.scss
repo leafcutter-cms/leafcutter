@@ -1,5 +1,41 @@
 @import "mixins/colors.scss";
 @import "mixins/sizing.scss";
+
+blockquote {
+    margin:0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+embed,
+figcaption,
+table,
+ul,
+ol,
+video,
+address,
+aside,
+fieldset,
+figure,
+dl,
+pre,
+header,
+nav,
+main,
+footer {
+    @include margin-block;
+}
+
+header,footer,nav {
+    @include font-size-smaller;
+}
+
 .breadcrumb {
     .breadcrumb-item {
         &:after {
@@ -10,6 +46,7 @@
             content: ' \f101 ';
             display: inline;
         }
+
         &:last-child:after {
             display: none;
         }
@@ -20,9 +57,11 @@
     display: flex;
     flex-wrap: wrap;
     @include margin-y;
+
     .leafcutterThumbnail {
         display: inline-block;
         max-width: 50%;
+
         img {
             display: block;
             max-width: 100%;
@@ -38,6 +77,7 @@
 .spinner {
     display: inline-block;
     line-height: 1;
+
     &:after {
         content: "\f1ce";
         display: inline-block;
@@ -55,6 +95,7 @@
     from {
         -ms-transform: rotate(0deg);
     }
+
     to {
         -ms-transform: rotate(360deg);
     }
@@ -64,6 +105,7 @@
     from {
         -moz-transform: rotate(0deg);
     }
+
     to {
         -moz-transform: rotate(360deg);
     }
@@ -73,6 +115,7 @@
     from {
         -webkit-transform: rotate(0deg);
     }
+
     to {
         -webkit-transform: rotate(360deg);
     }
@@ -82,6 +125,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
