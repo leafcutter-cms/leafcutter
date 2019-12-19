@@ -42,6 +42,7 @@ class ImageAssetBuilder
             }
         );
         $asset->setExtension($url->getArgs()['format']??$asset->getExtension());
+        $asset->setDateModified(filemtime($candidate));
         return $asset;
     }
 
