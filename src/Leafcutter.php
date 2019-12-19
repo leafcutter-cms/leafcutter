@@ -136,6 +136,8 @@ class Leafcutter
                     $response->setStatus(500);
                     $page = $this->pages()->getErrorPage(500, "Exception while handling request.", $request->getContext());
                 }
+                // call hooks when page is ready
+                $page = $this->hooks()->dispatchAll('onResponsePageReady', $page);
                 // put page content into template
                 $content = $this->templates()->applyToPage($page);
                 $content = $this->dom()->html($content);

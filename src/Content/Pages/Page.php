@@ -1,8 +1,8 @@
 <?php
 namespace Leafcutter\Content\Pages;
 
-use Leafcutter\Common\UrlInterface;
 use Flatrr\SelfReferencingFlatArray;
+use Leafcutter\Common\UrlInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class Page implements PageInterface
@@ -17,6 +17,11 @@ class Page implements PageInterface
         $this->meta = new SelfReferencingFlatArray;
         $this->setContent($content);
         $this->setUrl($url);
+    }
+
+    public function getMeta() : SelfReferencingFlatArray
+    {
+        return $this->meta;
     }
 
     public function getOrder($order) : int

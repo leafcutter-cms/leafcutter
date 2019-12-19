@@ -1,10 +1,11 @@
 <?php
 namespace Leafcutter\Themes;
 
-use Leafcutter\Leafcutter;
 use Flatrr\Config\Config;
-use Symfony\Component\Finder\Finder;
 use Leafcutter\Content\Assets\AssetInterface;
+use Leafcutter\Content\Pages\PageInterface;
+use Leafcutter\Leafcutter;
+use Symfony\Component\Finder\Finder;
 
 class ThemeProvider
 {
@@ -47,6 +48,36 @@ class ThemeProvider
         $this->variables = new Variables($leafcutter);
         $this->addDirectory(__DIR__.'/themes');
         $this->leafcutter->hooks()->addSubscriber($this);
+    }
+
+    public function onResponsePageReady(PageInterface $page)
+    {
+        // recursively load _site CSS and JS files files
+        $context = $page->getUrl()->getFullContext();
+        if ($context == '/') {
+            $context = '';
+        }
+        $context = explode('/', $context);
+        $check = '';
+        foreach ($context as $c) {
+            $check .= "$c/";
+            foreach ($this->leafcutter->assets()->list("$check/_site.{css,scss}") as $asset) {
+                $this->addCss($asset->getHash(), $asset, 'site');
+            }
+            foreach ($this->leafcutter->assets()->list("$check/_site.{js}") as $asset) {
+                $this->addCss($asset->getHash(), $asset, 'site');
+            }
+        }
+        // load _page CSS and JS files
+        $context = $page->getUrl()->getFullContext();
+        foreach ($this->leafcutter->assets()->list("$context/_page.{css,scss}") as $asset) {
+            $this->addCss($asset->getHash(), $asset, 'page');
+        }
+        foreach ($this->leafcutter->assets()->list("$context/_page.{js}") as $asset) {
+            $this->addCss($asset->getHash(), $asset, 'page');
+        }
+        // returns page unchanged
+        return $page;
     }
 
     public function variables() : Variables

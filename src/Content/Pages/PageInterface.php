@@ -1,6 +1,7 @@
 <?php
 namespace Leafcutter\Content\Pages;
 
+use Flatrr\SelfReferencingFlatArray;
 use Leafcutter\Common\Collections\CollectableInterface;
 use Leafcutter\Common\UrlInterface;
 
@@ -10,6 +11,7 @@ interface PageInterface extends CollectableInterface
 
     public function getName() : string;
     public function setName(string $name);
+    public function getMeta() : SelfReferencingFlatArray;
 
     public function getDateModified() : ?int;
     public function setDateModified(int $date);
