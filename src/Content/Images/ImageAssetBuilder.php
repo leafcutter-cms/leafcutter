@@ -113,8 +113,7 @@ class ImageAssetBuilder
 
     public function buildImageFile($asset, $src)
     {
-        //try to get an extra few seconds per image, and plenty of memory
-        set_time_limit(ini_get('max_execution_time')+2);
+        //try to make sure there's ample memory
         ini_set('memory_limit', '1024M');
 
         $dest = $asset->getOutputFile();
