@@ -21,7 +21,7 @@ class ContentDirectoryProvider implements ContentProviderInterface
     {
         $glob = $this->directory . '/' . $path;
         $files = [];
-        foreach (glob($glob, GLOB_BRACE) as $file) {
+        foreach ($this->glob($glob, GLOB_BRACE) as $file) {
             $file = realpath($file);
             if (is_file($file)) {
                 $files[] = new ContentFile($file, $this->pathToUrl($file));
@@ -34,12 +34,39 @@ class ContentDirectoryProvider implements ContentProviderInterface
     {
         $glob = $this->directory . '/' . $path;
         $files = [];
-        foreach (glob($glob, \GLOB_BRACE & \GLOB_ONLYDIR) as $file) {
+        foreach ($this->glob($glob, \GLOB_BRACE & \GLOB_ONLYDIR) as $file) {
             $file = realpath($file);
             if (is_dir($file)) {
                 $files[] = new ContentDirectory($file, $this->pathToUrl($file . '/'));
             }
         }
+        return $files;
+    }
+
+    protected function glob($pattern, $flags = 0, $traversePostOrder = false)
+    {
+        // Keep away the hassles of the rest if we don't use the wildcard anyway
+        if (strpos($pattern, '/**/') === false) {
+            return \glob($pattern, $flags);
+        }
+
+        $patternParts = explode('/**/', $pattern);
+
+        // Get sub dirs
+        $dirs = \glob(array_shift($patternParts) . '/*', GLOB_ONLYDIR | GLOB_NOSORT);
+
+        // Get files for current dir
+        $files = \glob($pattern, $flags);
+
+        foreach ($dirs as $dir) {
+            $subDirContent = $this->glob($dir . '/**/' . implode('/**/', $patternParts), $flags, $traversePostOrder);
+            if (!$traversePostOrder) {
+                $files = array_merge($files, $subDirContent);
+            } else {
+                $files = array_merge($subDirContent, $files);
+            }
+        }
+
         return $files;
     }
 

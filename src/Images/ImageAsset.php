@@ -17,11 +17,16 @@ class ImageAsset extends AbstractAsset
         $this->meta('date.modified', filemtime($source));
     }
 
+    public function __toString()
+    {
+        return '<img src="' . $this->publicUrl() . '" alt="' . $this->name() . '" />';
+    }
+
     protected function generateName()
     {
         $name = $this->filename() ?? "Untitled image";
         $name = preg_replace('@\.[a-z]+$@', '', $name);
-        $name = preg_replace('@[_\.]+@', ' ', $name);
+        $name = preg_replace('@[_\-\.]+@', ' ', $name);
         $name = ucfirst(trim($name));
         return $name;
     }

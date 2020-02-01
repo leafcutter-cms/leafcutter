@@ -197,6 +197,17 @@ class DOMProvider
         return $this->leafcutter->events()->dispatchAll('onDOMReady', $html);
     }
 
+    public function onDOMComment(DOMEvent $event)
+    {
+        $node = $event->getNode();
+        if (preg_match('/^@beginContext:(.+)$/', trim($node->data), $matches)) {
+            URLFactory::beginContext(new URL(trim($matches[1])));
+        }
+        if (trim($node->data) == '@endContext') {
+            URLFactory::endContext();
+        }
+    }
+
     /**
      * Dispatch events on a given DOM node, recurse into children.
      *

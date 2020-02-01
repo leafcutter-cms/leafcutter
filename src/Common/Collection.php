@@ -4,6 +4,7 @@ namespace Leafcutter\Common;
 class Collection implements \Iterator, \Countable
 {
     protected $items = [];
+    protected $items_sorted = [];
     protected $sorted = false;
     protected $sortBy = [];
     protected $position = 0;
@@ -35,27 +36,22 @@ class Collection implements \Iterator, \Countable
 
     public function add($item): void
     {
-        if (!$this->contains($item)) {
-            $this->items[] = $item;
-            $this->sorted = false;
-        }
+        $this->items[] = $item;
+        $this->sorted = false;
     }
 
     public function resetSort(): Collection
     {
         $this->sortBy = [];
-        $this->sorted = true;
+        $this->sorted = false;
         return $this;
     }
 
     public function sortBy($sorter, $descending = false): Collection
     {
-        $oldSort = $this->sortBy;
         array_unshift($this->sortBy, [$sorter, $descending]);
-        // if sortBy is changed, set sorted to false
-        if ($this->sortBy != $oldSort) {
-            $this->sorted = false;
-        }
+        // set sorted to false
+        $this->sorted = false;
         // fluent interface
         return $this;
     }
@@ -75,8 +71,14 @@ class Collection implements \Iterator, \Countable
         if ($this->sorted) {
             return;
         }
-        usort(
+        $this->items_sorted = array_filter(
             $this->items,
+            function ($e) {
+                return !$this->getVal($e, 'unlisted');
+            }
+        );
+        usort(
+            $this->items_sorted,
             [$this, 'itemcmp']
         );
         $this->sorted = true;
@@ -84,14 +86,9 @@ class Collection implements \Iterator, \Countable
 
     protected function itemcmp($a, $b)
     {
-        //TODO: compare items by various attributes, using valcmp
         foreach ($this->sortBy as list($name, $descending)) {
             if ($r = $this->valcmp($this->getVal($a, $name), $this->getVal($b, $name))) {
-                if ($descending) {
-                    return -$r;
-                } else {
-                    return $r;
-                }
+                return $descending ? -$r : $r;
             }
         }
         return 0;
@@ -133,7 +130,8 @@ class Collection implements \Iterator, \Countable
 
     public function count()
     {
-        return count($this->items);
+        $this->doSort();
+        return count($this->items_sorted);
     }
 
     public function import(array $items)
@@ -149,7 +147,7 @@ class Collection implements \Iterator, \Countable
     public function current()
     {
         $this->doSort();
-        return $this->items[$this->position];
+        return $this->items_sorted[$this->position];
     }
 
     public function key()
@@ -164,6 +162,7 @@ class Collection implements \Iterator, \Countable
 
     public function valid()
     {
-        return isset($this->items[$this->position]);
+        $this->doSort();
+        return isset($this->items_sorted[$this->position]);
     }
 }

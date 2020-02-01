@@ -5,6 +5,7 @@ use Flatrr\SelfReferencingFlatArray;
 use Leafcutter\Common\Collection;
 use Leafcutter\Leafcutter;
 use Leafcutter\URL;
+use Symfony\Component\Yaml\Yaml;
 
 class Page implements PageInterface
 {
@@ -15,14 +16,15 @@ class Page implements PageInterface
     public function __construct(URL $url, string $content)
     {
         // normalize trailing slashes/.html
-        if ($url->siteFullPath() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $url->siteFullPath())) {
-            $url->setPath($url->siteFullPath() . '/');
+        if ($url->path() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $url->path())) {
+            $url->setPath($url->path() . '/');
         }
         $this->url = $url;
-        $this->content = $content;
         $this->meta = new SelfReferencingFlatArray([
             'date.generated' => time(),
+            'unlisted' => false,
         ]);
+        $this->setContent($content);
     }
 
     public function dynamic(): bool
@@ -96,13 +98,33 @@ class Page implements PageInterface
         $this->url = clone $url;
     }
 
-    public function content(): string
+    public function content($wrap = true): string
     {
+        if (is_callable($this->content)) {
+            $this->content = ($this->content)();
+        }
+        if ($wrap) {
+            return '<!--@beginContext:' . $this->url() . '-->' . $this->content . '<!--@endContext-->';
+        }
         return $this->content;
     }
 
-    public function setContent(string $content)
+    public function setContent($content)
     {
+        if (is_string($content)) {
+            $content = preg_replace_callback('/<!--@meta(.+?)-->/ms', function ($match) {
+                try {
+                    $meta = Yaml::parse($match[1]);
+                    $this->meta->merge($meta, null, true);
+                } catch (\Throwable $th) {
+                    // throw $th;
+                }
+                return '';
+            }, $content);
+            if (!$this->meta['name'] && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
+                $this->meta['name'] = trim(strip_tags($matches[1]));
+            }
+        }
         $this->content = $content;
     }
 

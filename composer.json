@@ -15,9 +15,10 @@
         "erusev/parsedown-extra": "^0.8.1",
         "twig/twig": "~2",
         "scssphp/scssphp": "~1",
-        "imagine/imagine": "^1",
-        "chrisjean/php-ico": "^1",
-        "tedivm/stash": "0.14.*"
+        "imagine/imagine": "~1",
+        "chrisjean/php-ico": "~1",
+        "tedivm/stash": "0.14.*",
+        "symfony/yaml": "~4"
     },
     "autoload": {
         "psr-4": {

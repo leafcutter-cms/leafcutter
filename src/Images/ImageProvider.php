@@ -3,7 +3,6 @@ namespace Leafcutter\Images;
 
 use Imagine;
 use Leafcutter\Assets\AssetFileEvent;
-use Leafcutter\Common\Collection;
 use Leafcutter\Common\Filesystem;
 use Leafcutter\DOM\DOMEvent;
 use Leafcutter\Leafcutter;
@@ -57,27 +56,29 @@ class ImageProvider
         $this->leafcutter->dom()->prepareLinkAttribute($event, 'src', false);
     }
 
-    public function onAssetFile_png(AssetFileEvent $event): ?ImageAsset
-    {
-        return $this->buildAsset($event);
-    }
-
-    public function search(string $glob, array $query = [], string $namespace = null): Collection
+    public function search($search, array $query = [], string $namespace = null): Gallery
     {
         $images = [];
-        foreach ($this->leafcutter->content()->files($glob, $namespace) as $file) {
+        $url = new URL($search);
+        foreach ($this->leafcutter->content()->files($url->sitePath(), $namespace ?? $url->siteNamespace()) as $file) {
             $url = $file->url();
             $url->setQuery($query);
             $images["$url"] = $this->get($url);
         }
         $images = array_filter($images);
-        return new Collection($images);
+        return new Gallery($images);
     }
 
-    public function get(URL $url): ?ImageAsset
+    public function get(URL $url): ?Image
     {
-        $asset = $this->leafcutter->assets()->get($url);
-        return ($asset instanceof ImageAsset) ? $asset : null;
+        $path = $url->sitePath();
+        $namespace = $url->siteNamespace();
+        $file = $this->leafcutter->content()->files($path, $namespace);
+        if ($file) {
+            return new Image($url, $this->leafcutter);
+        } else {
+            return null;
+        }
     }
 
     public function generate(string $source, string $dest, array $query, $overwrite = false)
@@ -249,5 +250,45 @@ class ImageProvider
             }
         }
         return $imagine;
+    }
+
+    public function onAssetFile_png(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_jpg(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_jpeg(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_gif(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_wbmp(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_xbm(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_webp(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
+    }
+
+    public function onAssetFile_bmp(AssetFileEvent $event): ?ImageAsset
+    {
+        return $this->buildAsset($event);
     }
 }

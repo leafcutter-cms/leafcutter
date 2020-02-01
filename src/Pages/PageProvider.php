@@ -5,6 +5,7 @@ use Leafcutter\Common\Collection;
 use Leafcutter\Content\Content;
 use Leafcutter\Leafcutter;
 use Leafcutter\URL;
+use Leafcutter\URLFactory;
 
 class PageProvider
 {
@@ -73,7 +74,11 @@ class PageProvider
         }
         foreach ($this->leafcutter->content()->directories($glob, $namespace) as $directory) {
             $url = $directory->url();
-            $pages["$url"] = $this->get($url);
+            if (!($pages["$url"] = $this->get($url)) && substr(basename($directory->path()), 0, 1) != '_') {
+                foreach ($this->search($url->sitePath() . '*') as $p) {
+                    $pages[$p->url()->__toString()] = $p;
+                }
+            }
         }
         $pages = array_filter($pages);
         return new Collection($pages);
@@ -85,8 +90,8 @@ class PageProvider
         $content = $this->markdown()->text($content);
         $url = $e->url();
         $url->setQuery([]);
-        $content = "<div data-url-context=\"$url\">" . PHP_EOL . $content . PHP_EOL . "</div>";
-        return new Page($url, $content);
+        $page = new Page($url, $content);
+        return $page;
     }
 
     public function error(URL $url, int $code, int $originalCode = null): ?PageInterface
@@ -122,6 +127,12 @@ class PageProvider
 
     public function get(URL $url): ?PageInterface
     {
+        URLFactory::beginContext($url);
+        // skip non-site URLs
+        if (!$url->inSite()) {
+            URLFactory::endContext();
+            return null;
+        }
         // break recursion if the same page is seen too many times in a cycle
         $recursionCount = count(array_filter(
             $this->stack,
@@ -130,6 +141,7 @@ class PageProvider
             }
         ));
         if ($recursionCount > 4) {
+            URLFactory::endContext();
             return $this->error($url, 555);
         }
         $this->stack[] = "$url";
@@ -139,6 +151,7 @@ class PageProvider
         $this->leafcutter->events()->dispatchFirst('onPageURL', $url);
         if ($page) {
             array_pop($this->stack);
+            URLFactory::endContext();
             return $page;
         }
         // allow events to build pages from any URL
@@ -167,9 +180,11 @@ class PageProvider
             $this->leafcutter->events()->dispatchEvent('onPageReady', $event);
             $this->leafcutter->events()->dispatchEvent('onPageReturn', $event);
             array_pop($this->stack);
+            URLFactory::endContext();
             return $event->page();
         } else {
             array_pop($this->stack);
+            URLFactory::endContext();
             return null;
         }
     }

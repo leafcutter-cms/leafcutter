@@ -17,6 +17,59 @@ class AssetProvider
     }
 
     /**
+     * Preprocesses CSS assets, to resolve URLs
+     *
+     * @param AssetEvent $event
+     * @return void
+     */
+    public function onAssetReady_css(AssetEvent $event)
+    {
+        $css = $event->asset()->content();
+        // resolve @import URLs
+        $css = \preg_replace_callback(
+            "/@import (url)?([\"']?)([^\"']+)([\"']?)( ([^;]+))?;/",
+            function ($matches) {
+                // quotes must match or it's malformed
+                if ($matches[2] != $matches[4]) {
+                    return $matches[0];
+                }
+                //get the parts neeeded
+                $url = new URL($matches[3]);
+                $mediaQuery = @$matches[6];
+                //get url from matches
+                if ($asset = $this->get($url)) {
+                    return '@import url(' . $asset->publicUrl() . ') ' . $mediaQuery . ';';
+                } else {
+                    return $matches[0];
+                }
+            },
+            $css
+        );
+        // resolve url() URLs
+        $css = \preg_replace_callback(
+            "/url\(([\"']?)([^\"'\)]+)([\"']?)\)/",
+            function ($matches) {
+                // quotes must match or it's malformed
+                if ($matches[1] != $matches[3]) {
+                    return $matches[0];
+                }
+                //get url from matches
+                $url = new URL($matches[2]);
+                if ($asset = $this->get($url)) {
+                    return 'url(' . $asset->publicUrl() . ')';
+                } else {
+                    return $matches[0];
+                }
+            },
+            $css
+        );
+        // make new asset if CSS is changed
+        if ($css != $event->asset()->content()) {
+            $event->setAsset(new StringAsset($event->url(), $css));
+        }
+    }
+
+    /**
      * Compiles scss files into CSS, including resolving import paths
      * using Leafcutter's content provider. Also imports theme variables
      * from the theme provider.
@@ -85,15 +138,20 @@ class AssetProvider
 
     public function get(URL $url): ?AssetInterface
     {
-        // allow pages to fully bypass entire return system
-        if ($page = $this->leafcutter->events()->dispatchFirst('onAssetURL', $url)) {
-            return $page;
+        // skip non-site URLs
+        if (!$url->inSite()) {
+            return null;
+        }
+        // allow assetss to fully bypass entire return system
+        if ($asset = $this->leafcutter->events()->dispatchFirst('onAssetURL', $url)) {
+            return $asset;
         }
         // attempt to make a asset from content files
         $asset = null;
         $path = $this->searchPath($url->sitePath());
         $namespace = $url->siteNamespace();
         $files = $this->leafcutter->content()->files($path, $namespace);
+        URLFactory::beginContext($url);
         foreach ($files as $file) {
             $asset = $this->leafcutter->events()->dispatchFirst(
                 'onAssetFile_' . $file->extension(),
@@ -106,12 +164,14 @@ class AssetProvider
                 break;
             }
         }
+        URLFactory::endContext();
         // return finalized
         return $this->finalize($asset, $url);
     }
 
     protected function finalize(?AssetInterface $asset, URL $url)
     {
+        URLFactory::beginContext($url);
         // return asset after dispatching events
         if ($asset) {
             //set public URL and trigger pre-generation events
@@ -135,8 +195,10 @@ class AssetProvider
         if ($asset) {
             $event = new AssetEvent($asset, $url);
             $this->leafcutter->events()->dispatchEvent('onAssetReturn', $event);
+            URLFactory::endContext();
             return $event->asset();
         } else {
+            URLFactory::endContext();
             return null;
         }
     }

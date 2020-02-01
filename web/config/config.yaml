@@ -1,6 +1,10 @@
 site:
   url: 'https://localhost:8000/'
 
+templates:
+  site:
+    name: Demo site
+
 cache:
   driver: ephemeral
   directory: '${base_dir}/cache/'
@@ -15,7 +19,7 @@ assets:
 statics:
   enabled: true
   directory: '${base_dir}'
-  ttl: 10
+  ttl: 60
 
 theme:
   css:

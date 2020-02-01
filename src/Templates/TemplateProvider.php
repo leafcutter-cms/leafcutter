@@ -4,6 +4,7 @@ namespace Leafcutter\Templates;
 use Leafcutter\Leafcutter;
 use Leafcutter\Pages\PageEvent;
 use Leafcutter\Response;
+use Leafcutter\URLFactory;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
@@ -73,15 +74,20 @@ class TemplateProvider
     public function onPageReady(PageEvent $event)
     {
         $page = $event->page();
-        $content = $page->content();
+        $content = $page->content(false);
         $name = 'page_' . $page->hash();
-        $this->addOverride($name, $page->content());
-        $page->setContent($this->apply(
-            $name,
-            [
-                'page' => clone $page,
-            ]
-        ));
+        $page->setContent(function () use ($name, $page, $content) {
+            URLFactory::beginContext($page->url());
+            $this->addOverride($name, $content);
+            $content = $this->apply(
+                $name,
+                [
+                    'page' => $page,
+                ]
+            );
+            URLFactory::endContext();
+            return $content;
+        });
     }
 
     protected function sourceDirectoriesChanged()
