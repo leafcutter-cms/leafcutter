@@ -1,9 +1,10 @@
 <?php
 namespace Leafcutter\Cache;
 
+use Leafcutter\Leafcutter;
+
 interface CacheInterface
 {
-    public function get(string $key, callable $callback, int $ttl=null, array $tags=[]);
-    public function delete(string $key);
-    public function invalidateTags(array $tags);
+    public function get(string $key, callable $callback = null, int $expiration = null);
+    public function set(string $key, $value, int $expiration = null);
 }

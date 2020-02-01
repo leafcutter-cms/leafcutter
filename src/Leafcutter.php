@@ -1,77 +1,109 @@
 <?php
 namespace Leafcutter;
 
-use Leafcutter\Common\Url;
-use Leafcutter\Common\UrlInterface;
-
 class Leafcutter
 {
-    protected $config;
-    protected $logger;
-    protected $content;
-    protected $pages;
-    protected $markdown;
-    protected $hooks;
-    protected $assets;
-    protected $themes;
-    protected $templates;
-    protected $confHash = '00000000';
+    private static $instances = [];
+    private $config, $events, $cache, $content, $pages, $assets, $images, $templates, $theme, $dom, $statics;
 
-    public function __construct(Config\Config $config)
+    private function __construct(Config\Config $config = null)
     {
-        $this->config = $config;
+        $this->config = $config ?? new Config\Config();
+        $this->events = new Events\EventProvider($this);
         $this->cache = new Cache\CacheProvider($this);
-        $this->logger = new \Monolog\Logger('leafcutter');
-        $this->markdown = new Markdown\MarkdownProvider();
-        $this->hooks = new Hooks\HookProvider($this);
         $this->content = new Content\ContentProvider($this);
-        $this->pages = new Content\Pages\PageProvider($this);
-        $this->assets = new Content\Assets\AssetProvider($this);
-        $this->dom = new DOM\DOMProvider($this);
-        $this->themes = new Themes\ThemeProvider($this);
+        $this->pages = new Pages\PageProvider($this);
+        $this->assets = new Assets\AssetProvider($this);
+        $this->images = new Images\ImageProvider($this);
         $this->templates = new Templates\TemplateProvider($this);
-        $this->images = new Content\Images\ImageProvider($this);
-        $this->mutateHash($this->config);
-        $this->mutateHash(filemtime(__DIR__));
+        $this->theme = new Themes\ThemeProvider($this);
+        $this->dom = new DOM\DOMProvider($this);
+        $this->statics = new StaticPages\StaticPageProvider($this);
     }
 
-    public function mutateHash($input)
+    public function theme(): Themes\ThemeProvider
     {
-        $this->confHash = hash('crc32', $this->confHash.serialize($input));
+        return $this->theme;
     }
 
-    public function hash() : string
+    public function statics(): StaticPages\StaticPageProvider
     {
-        return $this->confHash;
+        return $this->statics;
     }
 
-    public function images() : Content\Images\ImageProvider
+    public function find(string $path)
+    {
+        try {
+            $url = new URL($path);
+            return $this->pages()->get($url) ?? $this->assets()->get($url);
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
+    public function buildResponse(URL $url, $normalizationRedirect = true): Response
+    {
+        // check for responses from events
+        $response =
+        $url->siteNamespace() ? $this->events()->dispatchFirst('onResponseURL_namespace_' . $url->siteNamespace(), $url) : null ??
+        $this->events()->dispatchFirst('onResponseURL', $url);
+        if ($response) {
+            $response->setURL($url);
+        }
+        // try to build response from page
+        $page = null;
+        if (!$response) {
+            $response = new Response();
+            $response->setURL($url);
+            $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url);
+            if ($page && $normalizationRedirect) {
+                URLFactory::normalizeCurrent($page->url());
+            }
+            if (!$page) {
+                $page = $this->pages()->error($url, 404);
+                $response->setStatus(404);
+            }
+            if ($page) {
+                $response->setText($page->content());
+            } else {
+                $response->setStatus(404);
+                $response->setText('<!doctype html><html><body><h1>404 not found</h1><p>Additionally, no error page could be located.</p></body></html>');
+            }
+        }
+        // dispatch final events and return
+        $this->events()->dispatchEvent('onResponseContentReady', $response);
+        if ($page) {
+            $this->events()->dispatchEvent('onResponsePageReady', $page);
+            $response->setSource($page);
+        }
+        $this->events()->dispatchEvent('onResponseReady', $response);
+        $this->events()->dispatchEvent('onResponseReturn', $response);
+        return $response;
+    }
+
+    public function cache(): Cache\CacheProvider
+    {
+        return $this->cache;
+    }
+
+    public function images(): Images\ImageProvider
     {
         return $this->images;
     }
 
-    public function cache(string $namespace=null, int $ttl=60, array $tags=[]) : Cache\CacheInterface
-    {
-        if (!$namespace) {
-            return $this->cache;
-        } else {
-            return $this->cache->workspace($namespace, $ttl, $tags);
-        }
-    }
-
-    public function themes() : Themes\ThemeProvider
-    {
-        return $this->themes;
-    }
-
-    public function templates() : Templates\TemplateProvider
-    {
-        return $this->templates;
-    }
-
-    public function dom() : DOM\DOMProvider
+    public function dom(): DOM\DOMProvider
     {
         return $this->dom;
+    }
+
+    public function assets(): Assets\AssetProvider
+    {
+        return $this->assets;
+    }
+
+    public function templates(): Templates\TemplateProvider
+    {
+        return $this->templates;
     }
 
     public function config(string $key)
@@ -79,184 +111,52 @@ class Leafcutter
         return $this->config[$key];
     }
 
-    public function assets() : Content\Assets\AssetProvider
+    public function events(): Events\EventProvider
     {
-        return $this->assets;
+        return $this->events;
     }
 
-    public function markdown() : Markdown\MarkdownProvider
-    {
-        return $this->markdown;
-    }
-
-    public function pages() : Content\Pages\PageProvider
-    {
-        return $this->pages;
-    }
-
-    public function content() : Content\ContentProvider
+    public function content(): Content\ContentProvider
     {
         return $this->content;
     }
 
-    public function logger() : \Monolog\Logger
+    public function pages(): Pages\PageProvider
     {
-        return $this->logger;
+        return $this->pages;
     }
 
-    public function hooks() : Hooks\HookProvider
+    public function hash(): string
     {
-        return $this->hooks;
+        return hash('crc32', filemtime(__DIR__) . $this->config->hash());
     }
 
-    public function get($url, $context=null)
+    /**
+     * Begin a new context either by optionally providing a Config object
+     * or existing Leafcutter object.
+     *
+     * @param [type] $specified
+     * @return Leafcutter
+     */
+    public static function beginContext($specified = null): Leafcutter
     {
-        //strip base URL
-        if (strpos($url, $this->getBase()) === 0) {
-            $url = substr($url, strlen($this->getBase()));
+        if ($specified instanceof Leafcutter) {
+            self::$instances[] = $specified;
+        } elseif ($specified instanceof Config\Config) {
+            self::$instances[] = new Leafcutter($specified);
+        } else {
+            self::$instances[] = new Leafcutter();
         }
-        return $this->pages()->get($url, $context)
-            ?? $this->assets()->get($url, $context);
+        return self::get();
     }
 
-    public function handleRequest(Request $request) : Response
+    public static function get(): Leafcutter
     {
-        $hash = $this->content()->hash($request->getFullContext());
-        return $this->cache->get(
-            'handleRequest.'.hash('crc32', serialize([$request,$hash])),
-            function () use ($request) {
-                $response = Response::createFrom($request);
-                try {
-                    if (!($page = $this->pages()->get($request->getPath()))) {
-                        $response->setStatus(404);
-                        $page = $this->pages()->getErrorPage(404, "Page not found.", $request->getContext());
-                    }
-                } catch (\Throwable $th) {
-                    $this->logger()->error('Leafcutter: handleRequest: Exception: '.$th->getMessage());
-                    $response->setStatus(500);
-                    $page = $this->pages()->getErrorPage(500, "Exception while handling request.", $request->getContext());
-                }
-                // call hooks when page is ready
-                $page = $this->hooks()->dispatchAll('onResponsePageReady', $page);
-                // put page content into template
-                $content = $this->templates()->applyToPage($page);
-                $content = $this->dom()->html($content);
-                $response->setContent($content);
-                return $response;
-            },
-            $this->config('cache.ttl.handle_request')
-        );
+        return end(self::$instances);
     }
 
-    public function outputResponse(Response $response)
+    public static function endContext()
     {
-        echo $response->getContent();
-    }
-
-    public function getBase() : string
-    {
-        return $this->base ?? $this->generateBase();
-    }
-
-    public function normalizeUrl(string $path, $context='/') : ?Url
-    {
-        $ocontext = $context;
-        if (!($context instanceof UrlInterface)) {
-            $context = preg_replace('@/[^/]+$@', '/', $context);
-            $context = Url::createFromString($context);
-        }
-        try {
-            $this->logger()->debug("normalizeUrl: $path, $ocontext");
-            $url = Url::createFromString($path, $context);
-            $this->logger()->debug("normalizeUrl: $path, $ocontext => $url");
-        } catch (\Throwable $th) {
-            $this->logger()->notice("normalizeUrl: failed: $path, $ocontext: ".$th->getMessage());
-            throw $th;
-        }
-        return $url;
-    }
-
-    public function prepareJS(string $js) : string
-    {
-        $this->logger->debug('Leafcutter: prepareJS: '.strlen($js).' bytes');
-        //minify if enabled, and return
-        if ($this->config('js.minify')) {
-            $js = \JShrink\Minifier::minify($js);
-        }
-        return $js;
-    }
-
-    public function prepareCSS(string $css, string $context="/") : string
-    {
-        $this->logger->debug('Leafcutter: prepareCSS: $context: '.strlen($css).' bytes');
-        //resolve variables in CSS
-        $css = $this->themes()->variables()->resolve($css, '${', '}');
-        //resolve @import URLs
-        $css = \preg_replace_callback(
-            "/@import (url)?([\"']?)([^\"']+)([\"']?)( ([^;]+))?;/",
-            function ($matches) use ($context) {
-                // quotes must match or it's malformed
-                if ($matches[2] != $matches[4]) {
-                    return $matches[0];
-                }
-                //get the parts neeeded
-                $url = $matches[3];
-                $mediaQuery = @$matches[6];
-                //get url from matches
-                if ($asset = $this->assets->get($url, $context)) {
-                    if ($asset->isEmpty()) {
-                        return '/* '.$url.' is empty, import skipped */';
-                    } else {
-                        return '@import url('.$asset->getOutputUrl().') '.$mediaQuery.';';
-                    }
-                } else {
-                    return $matches[0];
-                }
-            },
-            $css
-        );
-        //resolve url() URLs
-        $css = \preg_replace_callback(
-            "/url\(([\"']?)([^\"'\)]+)([\"']?)\)/",
-            function ($matches) use ($context) {
-                // quotes must match or it's malformed
-                if ($matches[1] != $matches[3]) {
-                    return $matches[0];
-                }
-                //get url from matches
-                if ($asset = $this->assets->get($matches[2], $context)) {
-                    return 'url('.$asset->getOutputUrl().')';
-                } else {
-                    return $matches[0];
-                }
-            },
-            $css
-        );
-        //minify if enabled, and return
-        if ($this->config('css.minify')) {
-            $css = $this->cssMin()->run($css);
-        }
-        return $css;
-    }
-
-    protected function generateBase() : string
-    {
-        $request = Request::createFromGlobals();
-        return $request->getBase();
-    }
-
-    protected static function cssMin()
-    {
-        static $cssMin = null;
-        if ($cssMin === null) {
-            $cssMin = new \tubalmartin\CssMin\Minifier;
-            $cssMin->setMemoryLimit('256M');
-            $cssMin->setMaxExecutionTime(120);
-            $cssMin->setPcreBacktrackLimit(3000000);
-            $cssMin->setPcreRecursionLimit(150000);
-            $cssMin->keepSourceMapComment(false);
-            $cssMin->setLinebreakPosition(1);
-        }
-        return $cssMin;
+        array_pop(self::$instances);
     }
 }

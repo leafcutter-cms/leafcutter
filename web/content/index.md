@@ -1,9 +1,3 @@
 # Home page
 
-{% for p in pages.children(page).sortBy('getDateModified',true) %}
- * {{p|raw}}
-{% endfor %}
-
-<!--@meta 
-name: Home
- -->
+This page overrides the content that is built in.

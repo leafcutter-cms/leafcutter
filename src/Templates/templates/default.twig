@@ -1,5 +1,5 @@
 <!doctype html>
-<html data-context-path="/">
+<html>
     <head>
 
 <title>
@@ -10,6 +10,8 @@
 
     </head>
     <body class="{{themes.getBodyClass}} {% block bodyclass %}{% endblock %}">
+{{ templates.html_injection('body_end')|raw }}
+
         <div id="main-wrapper">
 
 {% block header %}{% include "blocks/header.twig" %}{% endblock %}
@@ -18,5 +20,7 @@
 {% block footer %}{% include "blocks/footer.twig" %}{% endblock %}
 
         </div>
+
+{{ templates.html_injection('body_end')|raw }}
     </body>
 </html>

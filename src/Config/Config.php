@@ -1,7 +1,6 @@
 <?php
 namespace Leafcutter\Config;
 
-use Flatrr\SelfReferencingFlatArray;
 use Flatrr\Config\Config as BaseConfig;
 
 /**
@@ -12,7 +11,12 @@ class Config extends BaseConfig
     public function __construct(array $data = [])
     {
         parent::__construct($data);
-        $this->readFile(__DIR__.'/default.yaml');
+        $this->readFile(__DIR__ . '/default.yaml');
+    }
+
+    public function hash(): string
+    {
+        return hash('crc32', serialize($this->get()));
     }
 
     /**
@@ -24,7 +28,7 @@ class Config extends BaseConfig
     public function readDir(string $dir)
     {
         $dir = realpath($dir);
-        foreach (glob($dir.'/*.{yaml,yml,ini,json}', GLOB_BRACE) as $file) {
+        foreach (glob($dir . '/*.{yaml,yml,ini,json}', GLOB_BRACE) as $file) {
             $import = new BaseConfig();
             $import->readFile($file);
             $this->merge($import->get(null), null, true);

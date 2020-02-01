@@ -1,0 +1,174 @@
+<?php
+namespace Leafcutter;
+
+class URLFactory
+{
+    private static $context = [];
+    private static $site = [];
+
+    /**
+     * Automatically normalize the current URL and redirect to the normalized
+     * version if it doesn't match the actual current URL.
+     *
+     * Doesn't compare scheme by default, because that's not super reliable,
+     * especially if there are proxies involved.
+     *
+     * Can be used to normalize the actual current URL to any given URL, if
+     * $current isn't given it will be pulled using current()
+     *
+     * @param URL $current
+     * @param boolean $useScheme
+     * @return void
+     */
+    public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true)
+    {
+        // get computed current URL, including fixing trailing slashes if necessary
+        $current = ($current ?? self::current());
+        if ($fixSlashes && $current->siteFullPath() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $current->siteFullPath())) {
+            $current->setPath($current->siteFullPath() . '/');
+        }
+        $currentCmp = $current;
+        // get actual current URL
+        $actual = $actualCmp = self::currentActual();
+        // strip scheme if not needed
+        if (!$useScheme) {
+            $currentCmp = preg_replace('/^https?:/', ':', $current);
+            $actualCmp = preg_replace('/^https?:/', ':', $actual);
+        }
+        // do comparison and redirect
+        if ($currentCmp !== $actualCmp) {
+            header("Location: $current");
+            exit();
+        }
+    }
+
+    /**
+     * Get the current actual URL, as well as possible.
+     *
+     * @return string
+     */
+    public static function currentActual(): string
+    {
+        $protocol = @$_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        return $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    }
+
+    /**
+     * Begin a site context, which will be used by URLs to determine the
+     * site-specific parsings, like sitePath() or inSite(). Site contexts
+     * are a stack, so that different sites can be used non-sequentially.
+     *
+     * Specified base path must include a trailing slash.
+     *
+     * @param string $base
+     * @return void
+     */
+    public static function beginSite(string $base)
+    {
+        self::$site[] = new URL($base);
+    }
+
+    /**
+     * Get the current site context's base URL.
+     *
+     * @return URL|null
+     */
+    public static function site(): ?URL
+    {
+        if (self::$site) {
+            return clone end(self::$site);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * End/discard the current site context.
+     *
+     * @return void
+     */
+    public static function endSite()
+    {
+        array_pop(self::$site);
+    }
+
+    /**
+     * Begin a new context, to be used when parsing relative URLs. Given
+     * context may include a trailing filename, query, and/or fragment, but
+     * only the directory portion of the path will actually be used for
+     * parsing relative URLs from strings.
+     *
+     * Contexts are a stack, so the can be started/stopped and used in a
+     * non-sequential manner.
+     *
+     * @param string|URL $context
+     * @return void
+     */
+    public static function beginContext($context = null)
+    {
+        if (!$context) {
+            $context = self::site();
+        }
+        self::$context[] = self::normalize($context);
+    }
+
+    /**
+     * Get the current context URL.
+     *
+     * @return URL|null
+     */
+    public static function context(): ?URL
+    {
+        if (self::$context) {
+            return clone end(self::$context);
+        } else {
+            return self::site();
+        }
+    }
+
+    /**
+     * End/discard the current context.
+     *
+     * @return void
+     */
+    public static function endContext()
+    {
+        array_pop(self::$context);
+    }
+
+    /**
+     * Transform non-URL inputs into URLs.
+     *
+     * @param string|URL $input
+     * @return URL
+     */
+    public static function normalize($input): URL
+    {
+        if ($input instanceof URL) {
+            $input = clone $input;
+            return $input;
+        } else {
+            return self::normalize(new URL($input));
+        }
+    }
+
+    /**
+     * Get the current URL.
+     *
+     * @return URL
+     */
+    public static function current(): URL
+    {
+        static $current;
+        if (!$current) {
+            $current = new URL($_SERVER['REQUEST_URI']);
+            $current->setQuery($_GET);
+        }
+        return clone $current;
+    }
+
+    private function __construct()
+    {
+        //static class
+    }
+}

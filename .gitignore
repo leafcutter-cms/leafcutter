@@ -1,8 +1,7 @@
-/vendor/
+/vendor
 /composer.lock
 *.ignore
 
 /web/assets
 /web/cache
-/web/leafcutter.log
-/web/content
+/web/**/*.html

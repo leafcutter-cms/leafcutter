@@ -3,130 +3,95 @@ namespace Leafcutter\Cache;
 
 use Leafcutter\Leafcutter;
 
-use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-
-use Symfony\Component\Cache\Adapter\ApcuAdapter;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Cache\Adapter\ChainAdapter;
-use Symfony\Contracts\Cache\TagAwareCacheInterface;
-
-class CacheProvider implements \Leafcutter\Cache\CacheInterface
+class CacheProvider implements CacheInterface
 {
-    protected $cache;
-    protected $tagAware;
+    private $leafcutter;
+    protected $expiration = 60;
+    protected $pool;
+    protected $driver;
 
-    /**
-     * With APCu available, good performance can be had without providing a
-     * custom cache. If you're providing a ChainAdapter, make sure it has a
-     * fast in-memory option at the front, like an ArrayLoader. Many calls
-     * to Leafcutter's cache are assuming it can be used for in-request
-     * memoizing, so it needs to work quickly for that.
-     *
-     * @param CacheInterface $cache
-     */
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
-        //set up default cache in APCu if supported, otherwise fall back to ArrayAdapter
-        if (ApcuAdapter::isSupported()) {
-            $cache = new ApcuAdapter();
-        } else {
-            $cache = new ArrayAdapter();
+        $this->leafcutter->events()->addSubscriber($this);
+        // set up Stash -- currently only supports single drivers
+        switch ($leafcutter->config('cache.driver')) {
+            case 'sqlite':
+                $this->driver = new \Stash\Driver\Sqlite(
+                    $leafcutter->config('cache.driver_sqlite_config')
+                );
+                break;
+            case 'ephemeral';
+                $this->driver = new \Stash\Driver\Ephemeral();
+                break;
+            default: //default is filesystem
+                $this->driver = new \Stash\Driver\FileSystem(
+                    $leafcutter->config('cache.driver_filesystem_config')
+                );
+                break;
         }
-        $this->setCache($cache);
+        $this->pool = new \Stash\Pool($this->driver);
+        // set up internal namespaces
+        $this->pages = $this->namespace('cacheprovider_pagecache', $leafcutter->config('cache.ttl.pages'));
+        $this->assets = $this->namespace('cacheprovider_assetcache', $leafcutter->config('cache.ttl.assets'));
     }
 
-    /**
-     * Set the cache provider
-     *
-     * @param CacheInterface $cache
-     * @return void
-     */
-    public function setCache(CacheInterface $cache)
+    public function __destruct()
     {
-        $this->cache = $cache;
-        $this->tagAware = $this->cache instanceof TagAwareCacheInterface;
+        $this->pool->commit();
     }
 
-    /**
-     * Utility function that almost passes directly into a Symfony cache using the
-     * contracts interface.
-     *
-     * @param string $key
-     * @param callable $callback
-     * @param array $tags
-     * @param integer $ttl
-     * @return void
-     */
-    public function get(string $key, callable $callback, int $ttl=null, array $tags=[])
+    function namespace (string $name, $expiration = null): CacheInterface {
+        return new CacheNamespace($name, $this, $expiration ?? $this->expiration);
+    }
+
+    public function get(string $key, callable $callback = null, int $expiration = null)
     {
-        if ($ttl === null) {
-            $ttl = null;
+        if ($callback && $this->pool->getItem($key)->isMiss()) {
+            $this->set($key, $callback(), $expiration);
         }
-        $key.= '.'.$this->leafcutter->hash();
-        return $this->cache->get($key, function (ItemInterface $item) use ($key,$callback,$tags,$ttl) {
-            $value = call_user_func($callback);
-
-            if (method_exists($value, 'getTtl') && $newTtl = $value->getTtl()) {
-                $this->leafcutter->logger()->debug("Cache: Overriding TTL: $key=".get_class($value)." $ttl => $newTtl");
-                $item->expiresAfter($newTtl);
-            } else {
-                $item->expiresAfter($ttl);
-            }
-            !$this->tagAware ?? $item->tag($tags);
-
-            return $value;
-        });
+        return $this->pool->getItem($key)->get();
     }
 
-    /**
-     * Identical to Symfony cache delete()
-     *
-     * @param string $key
-     * @return void
-     */
-    public function delete(string $key)
+    public function set(string $key, $value, int $expiration = null)
     {
-        $this->cache->delete($key);
+        $item = $this->pool->getItem($key);
+        $item->lock();
+        $item->set($value);
+        $item->setTTL($expiration ?? $this->expiration);
+        $this->pool->save($item);
     }
 
-    /**
-     * Identical to Symfony cache invalidateTags()
-     *
-     * @param array $tags
-     * @return void
-     */
-    public function invalidateTags(array $tags)
+    public function onPageURL(\Leafcutter\URL $url)
     {
-        $this->cache->invalidateTags($tags);
+        return $this->pages->get($this->hashUrl($url));
     }
 
-    /**
-     * Identical to Symfony cache prune()
-     *
-     * @return void
-     */
-    public function prune()
+    public function onPageReturn($event)
     {
-        $this->cache->prune();
+        $this->pages->set($this->hashUrl($event->url()), $event->page());
     }
 
-    /**
-     * Retrieve a helper object that will operate on this cache using the same
-     * interface, but with key names automatically prefixed, and can have
-     * tags added to all items, and a different default TTL.
-     *
-     * @param string $namespace
-     * @param array $tags
-     * @param integer $ttl
-     * @return CacheWorkspace
-     */
-    public function workspace(string $namespace, int $ttl=null, array $tags=[]) : CacheWorkspace
+    public function onAssetURL(\Leafcutter\URL $url)
     {
-        if ($ttl === null) {
-            $ttl = 60;
-        }
-        return new CacheWorkspace($this, $namespace, $ttl, $tags);
+        return $this->assets->get($this->hashUrl($url));
+    }
+
+    public function onAssetReturn($event)
+    {
+        $this->assets->set($this->hashUrl($event->url()), $event->asset());
+    }
+
+    protected function hashUrl(\Leafcutter\URL $url): string
+    {
+        return hash(
+            'crc32',
+            serialize([
+                $url->__toString(),
+                $this->leafcutter->content()->hash(
+                    $url->sitePath(), $url->siteNamespace()
+                ),
+            ])
+        );
     }
 }

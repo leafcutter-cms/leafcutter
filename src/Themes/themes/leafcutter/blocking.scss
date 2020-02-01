@@ -2,7 +2,7 @@
 @import "mixins/sizing.scss";
 
 blockquote {
-    margin:0;
+    margin: 0;
 }
 
 h1,
@@ -32,7 +32,9 @@ footer {
     @include margin-block;
 }
 
-header,footer,nav {
+header,
+footer,
+nav {
     @include font-size-smaller;
 }
 

@@ -1,67 +1,24 @@
-# Site information for templating
 site:
-  name: Example Site
+  url: 'https://localhost:8000/'
 
-# Controls for asset generation
-assets:
-  # directory for assets to be saved in, must have trailing slash
-  output_directory: ${base_dir}/assets/
-  # the URL of that asset, must have leading/trailing slashes
-  output_context: /assets/
-  # base URL, if assets are going to be served from another domain
-  output_base: null
-
-# Controls for JS optimization
-js:
-  minify: true # whether JS should be minified
-  bundle: true # whether JS files should be bundled
-
-# Set an image driver
-# gd is the default because it's available almost everywhere
-# imagick or gmagick is preferred, because they're much faster
-images:
-  driver: gd
-  # driver: imagick
-
-# controls for CSS optimization
-css:
-  minify: true # whether CSS should be minified
-  bundle: true # whether CSS files should be bundled
-  max_inlined: 51200 # the maximum amount of CSS that can be inlined
-
-# caching settings
-# these only do anything meaningful if there's a persistent cache
 cache:
-  ttl:
-    # Time a given top-level response should be cached.
-    # Request handling is cached based on URL and a recursive hash of the content
-    # files/folders in that URL's source content directories.
-    # This means you can safely make this TTL very high. It might take this long
-    # for CSS/JS asset changes to ripple out, but content changes will invalidate
-    # this cache much quicker based on the content_provider TTL.
-    handle_request: 86400
-    # Time to cache the results of queries to the source content filesystem.
-    # A lot is based on this, but all its calls happen relatively fast. It's also
-    # the source of cache invalidation for a lot of things higher up the chain.
-    # Thus, it should be pretty short, like under a minute in most cases.
-    # You'll have to wait at least up to this long for changes to content to
-    # take effect on the site.
-    content_provider: 30
-    # The amount of time to cache asset preparation output. This mostly impacts
-    # how frequently CSS/JS assets are recompiled. Since CSS/JS compilation and
-    # minification are generally relatively fast, it's safe to make this fairly short.
-    # You'll have to wait at least this long for changes to CSS/JS to make it
-    # up onto the site.
-    # Note that image manipulations are cached basically forever. If you want to
-    # rebuilt image manipulations the only real option is to clear out your
-    # asset output directory.
-    asset_provider: 30
-    # Time to cache DOM preprocessing results. This operation is relatively quick,
-    # but also the output should be pretty stable depending on the given input.
-    # A middle ground of a few minutes is reasonable for most sites.
-    dom_provider: 300
+  driver: ephemeral
+  directory: '${base_dir}/cache/'
+  driver_filesystem_config:
+    encoder: Native
 
-# This isn't actually a super-optimal way to change to dark mode, but it works if
-# you know you'll always use it on every page it's a very simple way to do it.
-# theme_variables:
-#   body_class: colors-dark
+assets:
+  output:
+    directory: '${base_dir}/assets/'
+    url: '@/assets/'
+
+statics:
+  enabled: true
+  directory: '${base_dir}'
+  ttl: 10
+
+theme:
+  css:
+    bundle: true
+  js:
+    bundle: true

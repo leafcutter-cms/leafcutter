@@ -2,16 +2,14 @@
 namespace Leafcutter\Themes;
 
 use Flatrr\Config\Config;
-use Leafcutter\Content\Assets\AssetInterface;
-use Leafcutter\Content\Pages\PageInterface;
+use Leafcutter\Assets\AssetInterface;
 use Leafcutter\Leafcutter;
-use Symfony\Component\Finder\Finder;
+use Leafcutter\URL;
 
 class ThemeProvider
 {
-    use \Leafcutter\Common\SourceDirectoriesTrait;
-
     protected $leafcutter;
+    protected $directories = [];
     protected $assets = [];
     protected $mediaAliases = [
         'blocking' => 'all',
@@ -21,84 +19,38 @@ class ThemeProvider
         'theme' => 'all',
     ];
     protected $cssMedias = [
-        'library',//loads first, basically where anything external should go
-        'blocking',//loads first after library, used to get first in line for inlining
-        'theme',//theme
-        'all',//media queries are fine, but it's better to keep medias in separate files
+        'library', //loads first, basically where anything external should go
+        'blocking', //loads first after library, used to get first in line for inlining
+        'theme', //theme
+        'all', //media queries are fine, but it's better to keep medias in separate files
         'screen',
         'print',
         'speech',
-        'site',//things that are site-specific, may include media queries
-        'page'//things that are page-specific, may include media queries
+        'site', //things that are site-specific, may include media queries
+        'page', //things that are page-specific, may include media queries
     ];
     protected $jsMedias = [
-        'library',//loads first
-        'theme',//only exists to give a section before "site" to be used by themes
-        'all',//generic location
-        'site',//site-specific
-        'page'//page-specific
+        'library', //loads first
+        'theme', //only exists to give a section before "site" to be used by themes
+        'all', //generic location
+        'site', //site-specific
+        'page', //page-specific
     ];
     protected $inlined = 0;
     protected $loadedThemes = [];
-    protected $bodyClasses = [];
 
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
-        $this->variables = new Variables($leafcutter);
-        $this->addDirectory(__DIR__.'/themes');
-        $this->leafcutter->hooks()->addSubscriber($this);
-    }
-
-    public function onResponsePageReady(PageInterface $page)
-    {
-        // recursively load _site CSS and JS files files
-        $context = $page->getUrl()->getFullContext();
-        if ($context == '/') {
-            $context = '';
-        }
-        $context = explode('/', $context);
-        $check = '';
-        foreach ($context as $c) {
-            $check .= "$c/";
-            foreach ($this->leafcutter->assets()->list("$check/_site.{css,scss}") as $asset) {
-                $this->addCss($asset->getHash(), $asset, 'site');
-            }
-            foreach ($this->leafcutter->assets()->list("$check/_site.{js}") as $asset) {
-                $this->addCss($asset->getHash(), $asset, 'site');
-            }
-        }
-        // load _page CSS and JS files
-        $context = $page->getUrl()->getFullContext();
-        foreach ($this->leafcutter->assets()->list("$context/_page.{css,scss}") as $asset) {
-            $this->addCss($asset->getHash(), $asset, 'page');
-        }
-        foreach ($this->leafcutter->assets()->list("$context/_page.{js}") as $asset) {
-            $this->addCss($asset->getHash(), $asset, 'page');
-        }
-        // returns page unchanged
-        return $page;
-    }
-
-    public function variables() : Variables
-    {
-        return $this->variables;
-    }
-
-    public function getBodyClass() : string
-    {
-        $classes = $this->bodyClasses;
-        if ($this->variables()->get('body_class')) {
-            $classes[] = $this->variables()->get('body_class');
-        }
-        return implode(' ', $classes);
+        $this->variables = new ThemeVariables($leafcutter);
+        $this->addDirectory(__DIR__ . '/themes');
+        $leafcutter->events()->addSubscriber($this);
     }
 
     public function loadTheme(string $name)
     {
-        $this->leafcutter->logger()->debug('Theme: loadTheme '.$name);
         $name = preg_replace('/[^a-z0-9\-_]/', '', $name);
-        foreach ($this->sourceDirectories() as $dir) {
+        foreach ($this->directories as $dir) {
             $dir = "$dir/$name";
             $yaml = "$dir/theme.yaml";
             if (is_file($yaml)) {
@@ -107,66 +59,19 @@ class ThemeProvider
         }
     }
 
-    public function onPrefixedContentList_themes($globs)
-    {
-        $files = [];
-        foreach ($this->sourceDirectories() as $dir) {
-            foreach ($globs as $glob) {
-                $glob = "$dir$glob";
-                foreach (glob($glob, GLOB_BRACE) as $match) {
-                    $path = $this->normalizePath($match);
-                    $files[$path] = @$files[$path] ?? $match;
-                }
-            }
-        }
-        return $files;
-    }
-
-    protected function normalizePath(string $path) : string
-    {
-        foreach ($this->sourceDirectories() as $dir) {
-            if (strpos($path, $dir) === 0) {
-                $path = substr($path, strlen($dir));
-                break;
-            }
-        }
-        if (substr($path, 0, 1) != '/') {
-            $path = "/$path";
-        }
-        $path = preg_replace('@/(_|[0-9]{1,3}\. )@', '/', $path);
-        return "/~themes$path";
-    }
-
-    public function onPrefixedAssetGet_themes($url)
-    {
-        foreach ($this->sourceDirectories() as $dir) {
-            $file = $dir.$url->getPath();
-            if (is_file($file)) {
-                return $this->leafcutter->assets()->getFromFile(
-                    $url->getFullPath(),
-                    $file,
-                    $url->getArgs()
-                );
-            }
-        }
-        return null;
-    }
-
     protected function doLoadTheme($dir, $yaml)
     {
         $themeName = basename($dir);
         if (in_array($dir, $this->loadedThemes)) {
-            $this->leafcutter->logger()->notice('Theme: already loaded '.$themeName);
             return;
         }
-        $this->leafcutter->logger()->debug('Theme: loading '.$themeName);
         $this->loadedThemes[] = $dir;
         $config = new Config([
-            'theme.prefix' => "/~themes/$themeName/"
+            'theme.prefix' => "/@themes/$themeName/",
         ]);
         $config->readFile($yaml);
         //set up advanced files (these don't get prefixed by theme name)
-        foreach ($config['advanced']??[] as $k => $f) {
+        foreach ($config['advanced'] ?? [] as $k => $f) {
             $f['name'] = $k;
             $this->addAsset(
                 $f['type'],
@@ -178,17 +83,17 @@ class ThemeProvider
             );
         }
         //set up internal CSS files
-        foreach ($config['css']??[] as $media => $files) {
+        foreach ($config['css'] ?? [] as $media => $files) {
             foreach ($files as $file) {
                 $url = $file;
                 if (substr($url, 0, 1) != '/') {
-                    $url = $config['theme.prefix'].$url;
+                    $url = $config['theme.prefix'] . $url;
                 }
                 $name = "theme: $themeName: $media: $file";
                 $this->addAsset(
                     'css',
-                    $url,//url
-                    $name,//name
+                    $url, //url
+                    $name, //name
                     null,
                     false,
                     $media
@@ -196,11 +101,11 @@ class ThemeProvider
             }
         }
         //set up internal JS files
-        foreach ($config['js']??[] as $media => $files) {
+        foreach ($config['js'] ?? [] as $media => $files) {
             foreach ($files as $file) {
                 $url = $file;
                 if (substr($url, 0, 1) != '/') {
-                    $url = $config['theme.prefix'].$url;
+                    $url = $config['theme.prefix'] . $url;
                 }
                 $name = "theme: $themeName: $media: $file";
                 $this->addAsset(
@@ -215,61 +120,74 @@ class ThemeProvider
         }
     }
 
-    public function addJs(string $name, $source, string $media='all', array $options=[])
+    public function addDirectory(string $dir)
     {
-        $this->leafcutter->logger()->debug('Theme: addJs '.$name);
-        $this->addAsset('js', $source, $name, @$options['integrity'], !!@$options['async'], $media);
-    }
-
-    public function addCss(string $name, $source, string $media='all', array $options=[])
-    {
-        $this->leafcutter->logger()->debug('Theme: addCss '.$name);
-        $this->addAsset('css', $source, $name, @$options['integrity'], false, $media);
-    }
-
-    protected function addAsset($type, $source, string $name, ?string $integrity, bool $async, ?string $media)
-    {
-        $id = $type.'|'.$name;
-        if ($source instanceof AssetInterface) {
-            $this->leafcutter->logger()->debug('Theme: adding Asset: '.$id.': '.get_class($source));
-        } else {
-            $this->leafcutter->logger()->debug('Theme: adding asset: '.$id.': '.$source);
-        }
-        //unset if source is null/false/empty
-        if (!$source) {
-            unset($this->assets[$id]);
-            return;
-        }
-        //special cases for if source is an Asset
-        if ($source instanceof AssetInterface) {
-            //unset if Asset is empty
-            if ($source->isEmpty()) {
-                $this->leafcutter->logger()->notice('Theme: skipping empty Asset: '.$id.': '.get_class($source));
-                unset($this->assets[$id]);
+        if ($dir = realpath($dir)) {
+            //skip already-added directories
+            if (in_array($dir, $this->directories)) {
                 return;
             }
-            $integrity = null;
+            //add new dir to front
+            array_unshift($this->directories, $dir);
+            //add directory to "themes" namespace
+            $this->leafcutter->content()->addDirectory($dir, 'themes');
         }
-        //we have a valid source, add it in
-        $this->assets[$id] = [
-            'source' => $source,
-            'crossorigin' => $integrity?'anonymous':null,
-            'integrity' => $integrity,
-            'type' => $type,
-            'async' => $async,
-            'media' => $media
-        ];
     }
 
-    public function getHeadHtml() : string
+    public function variables(): ThemeVariables
     {
-        $this->leafcutter->logger()->debug('Theme: getHeadHtml');
+        return $this->variables;
+    }
+
+    public function onResponseContentReady($response)
+    {
+        // load _site CSS and JS files files
+        $context = $response->url()->sitePath();
+        // load all the root _site files for null namespace if URL has a namespace
+        if ($namespace = $response->url()->siteNamespace()) {
+            foreach ($this->leafcutter->assets()->search("_site.css") as $asset) {
+                $this->addCss($asset->hash(), $asset, 'site');
+            }
+            foreach ($this->leafcutter->assets()->search("_site.js") as $asset) {
+                $this->addCss($asset->hash(), $asset, 'site');
+            }
+        }
+        // load all _site files for parent directories
+        $context = explode('/', $context);
+        $check = '';
+        foreach ($context as $c) {
+            $check .= "$c/";
+            foreach ($this->leafcutter->assets()->search("{$check}_site.css", $namespace) as $asset) {
+                $this->addCss($asset->hash(), $asset, 'site');
+            }
+            foreach ($this->leafcutter->assets()->search("{$check}_site.js", $namespace) as $asset) {
+                $this->addCss($asset->hash(), $asset, 'site');
+            }
+        }
+        // load _page CSS and JS files
+        $context = $response->url()->siteFullPath();
+        $context = preg_replace('@[^/]+$@', '', $context);
+        foreach ($this->leafcutter->assets()->search("{$context}_page.css", $namespace) as $asset) {
+            $this->addCss($asset->hash(), $asset, 'page');
+        }
+        foreach ($this->leafcutter->assets()->search("{$context}_page.js", $namespace) as $asset) {
+            $this->addCss($asset->hash(), $asset, 'page');
+        }
+    }
+
+    public function onTemplateInjection_head()
+    {
+        echo $this->getHeadHtml() . PHP_EOL;
+    }
+
+    public function getHeadHtml(): string
+    {
         //resolve asset objects wherever possible
         array_walk(
             $this->assets,
             function (&$v, $k) {
                 if (is_string($v['source'])) {
-                    $v['source'] = $this->leafcutter->assets()->get($v['source'])??$v['source'];
+                    $v['source'] = $this->leafcutter->assets()->get(new URL($v['source'])) ?? $v['source'];
                 }
             }
         );
@@ -286,62 +204,62 @@ class ThemeProvider
         return implode(PHP_EOL, array_filter($html));
     }
 
-    protected function filter(string $type, string $media=null, bool $async=null)
+    protected function filter(string $type, string $media = null, bool $async = null)
     {
         return array_filter(
             $this->assets,
-            function ($e) use ($type,$async,$media) {
+            function ($e) use ($type, $async, $media) {
                 return
                     $e['type'] == $type
                     && ($async === null || $e['async'] == $async)
                     && ($media === null || strpos($e['media'], $media) === 0)
-                    ;
+                ;
             }
         );
     }
 
-    protected function cssHtml($arr) : string
+    protected function cssHtml($arr): string
     {
         $arr = array_filter($arr);
-        if ($this->leafcutter->config('css.bundle')) {
+        if ($this->leafcutter->config('theme.css.bundle')) {
             $arr = $this->bundle_assets($arr, 'css');
         }
         $arr = array_filter($arr);
         array_walk(
             $arr,
             function (&$e, $k) {
-                $media = $this->mediaAliases[$e['media']]??$e['media'];
+                $media = $this->mediaAliases[$e['media']] ?? $e['media'];
                 if ($media == 'all') {
                     $media = '';
                 } else {
-                    $media = ' media="'.$media.'"';
+                    $media = ' media="' . $media . '"';
                 }
                 if ($e['source'] instanceof AssetInterface) {
-                    if ($e['media'] != 'library' && $this->inlined+$e['source']->getFilesize() <= $this->leafcutter->config('css.max_inlined')) {
-                        $this->inlined += $e['source']->getFilesize();
-                        $e = '<style type="text/css"'.$media.'>'.PHP_EOL
-                            .$e['source']->getContent()
-                            .PHP_EOL."</style>";
+                    if ($e['media'] != 'library' && $this->inlined + $e['source']->size() <= $this->leafcutter->config('css.max_inlined')) {
+                        $this->inlined += $e['source']->size();
+                        $e = '<style type="text/css"' . $media . '>' . PHP_EOL
+                        . $e['source']->content()
+                            . PHP_EOL . "</style>";
                         return;
                     }
-                    $source = $e['source']->getOutputUrl();
+                    $source = $e['source']->publicUrl();
                 } else {
                     $source = $e['source'];
                 }
-                $e = '<link rel="stylesheet" href="'.$source.'" type="text/css"'
-                    .$media
-                    .($e['crossorigin']?' crossorigin="'.$e['crossorigin'].'"':'')
-                    .($e['integrity']?' integrity="'.$e['integrity'].'"':'')
-                    .' />';
+                $e = '<link rel="stylesheet" href="' . $source . '" type="text/css"'
+                    . $media
+                    . ($e['crossorigin'] ? ' crossorigin="' . $e['crossorigin'] . '"' : '')
+                    . ($e['integrity'] ? ' integrity="' . $e['integrity'] . '"' : '')
+                    . ' />';
             }
         );
         return implode(PHP_EOL, $arr);
     }
 
-    protected function jsHtml($arr) : string
+    protected function jsHtml($arr): string
     {
         $arr = array_filter($arr);
-        if ($this->leafcutter->config('js.bundle')) {
+        if ($this->leafcutter->config('theme.js.bundle')) {
             $arr = $this->bundle_assets($arr, 'js');
         }
         $arr = array_filter($arr);
@@ -350,15 +268,15 @@ class ThemeProvider
             $arr,
             function (&$e, $k) {
                 if ($e['source'] instanceof AssetInterface) {
-                    $source = $e['source']->getOutputUrl();
+                    $source = $e['source']->publicUrl();
                 } else {
                     $source = $e['source'];
                 }
-                $e = '<script src="'.$source.'"'
-                    .($e['async']?' async="true"':'')
-                    .($e['crossorigin']?' crossorigin="'.$e['crossorigin'].'"':'')
-                    .($e['integrity']?' integrity="'.$e['integrity'].'"':'')
-                    .'></script>';
+                $e = '<script src="' . $source . '"'
+                    . ($e['async'] ? ' async="true"' : '')
+                    . ($e['crossorigin'] ? ' crossorigin="' . $e['crossorigin'] . '"' : '')
+                    . ($e['integrity'] ? ' integrity="' . $e['integrity'] . '"' : '')
+                    . '></script>';
             }
         );
         return implode(PHP_EOL, $arr);
@@ -392,24 +310,62 @@ class ThemeProvider
             } else {
                 $content = [];
                 foreach ($b as $e) {
-                    $content[] = '/*'.PHP_EOL.$e['source']->getUrl().PHP_EOL.'*/';
-                    $content[] = $e['source']->getContent();
+                    $content[] = '/*' . PHP_EOL . $e['source']->url() . PHP_EOL . '*/';
+                    $content[] = $e['source']->content();
                     if ($ext == 'js') {
                         $content[] = ';';
                     }
                 }
                 $content = implode(PHP_EOL, $content);
-                $filename = $e['media'].'-'.hash('crc32', $content).'.'.$ext;
+                $filename = $e['media'] . '-' . hash('crc32', $content) . '.' . $ext;
                 $bundled["bundle $k: $filename"] = [
-                    'source' => $this->leafcutter->assets()->getFromString('/~themes/'.$filename, $content),
+                    'source' => $this->leafcutter->assets()->getFromString($content, new URL('@/@themes/' . $filename)),
                     'crossorigin' => null,
                     'integrity' => null,
                     'type' => $e['type'],
                     'async' => $e['async'],
-                    'media' => $e['media']
+                    'media' => $e['media'],
                 ];
             }
         }
         return $bundled;
+    }
+
+    public function addJs(string $name, $source, string $media = 'all', array $options = [])
+    {
+        $this->addAsset('js', $source, $name, @$options['integrity'], !!@$options['async'], $media);
+    }
+
+    public function addCss(string $name, $source, string $media = 'all', array $options = [])
+    {
+        $this->addAsset('css', $source, $name, @$options['integrity'], false, $media);
+    }
+
+    protected function addAsset($type, $source, string $name, ?string $integrity, bool $async, ?string $media)
+    {
+        $id = $type . '|' . $name;
+        //unset if source is null/false/empty
+        if (!$source) {
+            unset($this->assets[$id]);
+            return;
+        }
+        //special cases for if source is an Asset
+        if ($source instanceof AssetInterface) {
+            //unset if Asset is empty
+            if (!trim($source->content())) {
+                unset($this->assets[$id]);
+                return;
+            }
+            $integrity = null;
+        }
+        //we have a valid source, add it in
+        $this->assets[$id] = [
+            'source' => $source,
+            'crossorigin' => $integrity ? 'anonymous' : null,
+            'integrity' => $integrity,
+            'type' => $type,
+            'async' => $async,
+            'media' => $media,
+        ];
     }
 }

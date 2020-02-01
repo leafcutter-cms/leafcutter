@@ -1,146 +1,106 @@
 assets:
-  allowed_extensions:
-    # text formats
+  # These extensions may also potentially be fulfilled by the specified
+  # additional extenions
+  equivalent_extensions:
+    css: [scss]
+  # These extensions are allowed to be passed through as linked assets,
+  # if no specific handlers have handled them.
+  passthrough_extensions:
     txt: true
     css: true
     js: true
-    # image formats
-    jpg: true
-    gif: true
-    png: true
-    wbmp: true
-    xbm: true
-    webp: true
-    bmp: true
-    ico: true
-    svg: true
-    # web fonts
-    eot: true
-    woff2: true
-    woff: true
-    ttf: true
+
+cache:
+  directory: null
+  ttl:
+    content: 60
+    pages: 600
+    assets: 3600
+  driver: ephemeral
+  driver_filesystem_config:
+    encoder: Serializer
+    path: ${cache.directory}Cache
+  driver_sqlite_config:
+    path: ${cache.directory}Cache
+
+statics:
+  enabled: false
+  ttl: 300
+
+templates:
+  twig_environment:
+    cache: false
+  site:
+    name: Untitled site
 
 images:
-  driver: gd
-  presets:
-    default:
-      fit: 1000
-    full:
-      fit: 1920
-    thumbnail:
-      crop: 144
+  driver: gd # options are gd, imagick, or gmagick
 
-# caching settings
-# these only do anything meaningful if there's a persistent cache
-cache:
-  ttl:
-    # Time a given top-level response should be cached.
-    # Request handling is cached based on URL and a recursive hash of the content
-    # files/folders in that URL's source content directories.
-    # This means you can safely make this TTL very high. It might take this long
-    # for CSS/JS asset changes to ripple out, but content changes will invalidate
-    # this cache much quicker based on the content_provider TTL.
-    handle_request: 86400
-    # Time to cache the results of queries to the source content filesystem.
-    # A lot is based on this, but all its calls happen relatively fast. It's also
-    # the source of cache invalidation for a lot of things higher up the chain.
-    # Thus, it should be pretty short, like under a minute in most cases.
-    # You'll have to wait at least up to this long for changes to content to
-    # take effect on the site.
-    content_provider: 30
-    # The amount of time to cache asset preparation output. This mostly impacts
-    # how frequently CSS/JS assets are recompiled. Since CSS/JS compilation and
-    # minification are generally relatively fast, it's safe to make this fairly short.
-    # You'll have to wait at least this long for changes to CSS/JS to make it
-    # up onto the site.
-    # Note that image manipulations are cached basically forever. If you want to
-    # rebuilt image manipulations the only real option is to clear out your
-    # asset output directory.
-    asset_provider: 30
-    # Time to cache DOM preprocessing results. This operation is relatively quick,
-    # but also the output should be pretty stable depending on the given input.
-    # A middle ground of a few minutes is reasonable for most sites.
-    dom_provider: 300
-  
-site:
-  name: Unnamed site
-
-twig_environment:
-  cache: false
-
-js:
-  minify: false
-  bundle: false
-
-css:
-  minify: false
-  bundle: false
-  max_inlined: 0
-
-theme_variables:
-  # sizing
-  margin: 2rem
-  padding: 1.5rem
-  font-size: 1rem
-  font-scaler: 1.2
-  heading-font-scaler: 1.2
-  heading-scale: 1.2
-  line-height: 1.5em
-  line-height-loose: 1.8em
-  line-height-tight: 1.2em
-  # colors
-  color-primary: '#43A047'
-  color-secondary: '#9E9D24'
-  color-success: '#8BC34A'
-  color-danger: '#f44336'
-  color-warning: '#FF9800'
-  color-info: '#00BCD4'
-  # link colors
-  color-a: ${theme_variables.text-primary}
-  color-a-visited: ${theme_variables.text-secondary}
-  color-a-focus: ${theme_variables.text-info}
-  color-a-hover: ${theme_variables.text-info}
-  color-a-active: ${theme_variables.text-success}
-  color-dark-a: ${theme_variables.text-dark-primary}
-  color-dark-a-visited: ${theme_variables.text-dark-secondary}
-  color-dark-a-focus: ${theme_variables.text-dark-info}
-  color-dark-a-hover: ${theme_variables.text-dark-info}
-  color-dark-a-active: ${theme_variables.text-dark-success}
-  # light mode
-  text-normal: '#444'
-  text-accent: '#000'
-  text-primary: ${theme_variables.color-primary}
-  text-secondary: ${theme_variables.color-secondary}
-  text-success: ${theme_variables.color-success}
-  text-danger: ${theme_variables.color-danger}
-  text-warning: ${theme_variables.color-warning}
-  text-info: ${theme_variables.color-info}
-  text-muted: '#999'
-  bg-normal: '#eee'
-  bg-accent: '#fff'
-  bg-primary: ${theme_variables.color-primary}
-  bg-secondary: ${theme_variables.color-secondary}
-  bg-success: ${theme_variables.color-success}
-  bg-danger: ${theme_variables.color-danger}
-  bg-warning: ${theme_variables.color-warning}
-  bg-info: ${theme_variables.color-info}
-  bg-muted: '#ddd'
-  # dark mode
-  text-dark-normal: '#ddd'
-  text-dark-accent: '#eee'
-  text-dark-primary: ${theme_variables.text-primary}
-  text-dark-secondary: ${theme_variables.text-secondary}
-  text-dark-success: ${theme_variables.text-success}
-  text-dark-danger: ${theme_variables.text-danger}
-  text-dark-warning: ${theme_variables.text-warning}
-  text-dark-info: ${theme_variables.text-info}
-  text-dark-muted: '#999'
-  bg-dark-normal: '#333'
-  bg-dark-accent: '#222'
-  bg-dark-primary: ${theme_variables.bg-primary}
-  bg-dark-secondary: ${theme_variables.bg-secondary}
-  bg-dark-success: ${theme_variables.bg-success}
-  bg-dark-danger: ${theme_variables.bg-danger}
-  bg-dark-warning: ${theme_variables.bg-warning}
-  bg-dark-info: ${theme_variables.bg-info}
-  bg-dark-muted: '#555'
+theme:
+  variables:
+    # sizing
+    margin: 2rem
+    padding: 1.5rem
+    font-size: 1rem
+    font-scaler: 1.2
+    heading-font-scaler: 1.2
+    heading-scale: 1.2
+    line-height: 1.5em
+    line-height-loose: 1.8em
+    line-height-tight: 1.2em
+    # colors
+    color-primary: '#43A047'
+    color-secondary: '#9E9D24'
+    color-success: '#8BC34A'
+    color-danger: '#f44336'
+    color-warning: '#FF9800'
+    color-info: '#00BCD4'
+    # link colors
+    color-a: ${theme.variables.text-primary}
+    color-a-visited: ${theme.variables.text-secondary}
+    color-a-focus: ${theme.variables.text-info}
+    color-a-hover: ${theme.variables.text-info}
+    color-a-active: ${theme.variables.text-success}
+    color-dark-a: ${theme.variables.text-dark-primary}
+    color-dark-a-visited: ${theme.variables.text-dark-secondary}
+    color-dark-a-focus: ${theme.variables.text-dark-info}
+    color-dark-a-hover: ${theme.variables.text-dark-info}
+    color-dark-a-active: ${theme.variables.text-dark-success}
+    # light mode
+    text-normal: '#444'
+    text-accent: '#000'
+    text-primary: ${theme.variables.color-primary}
+    text-secondary: ${theme.variables.color-secondary}
+    text-success: ${theme.variables.color-success}
+    text-danger: ${theme.variables.color-danger}
+    text-warning: ${theme.variables.color-warning}
+    text-info: ${theme.variables.color-info}
+    text-muted: '#999'
+    bg-normal: '#eee'
+    bg-accent: '#fff'
+    bg-primary: ${theme.variables.color-primary}
+    bg-secondary: ${theme.variables.color-secondary}
+    bg-success: ${theme.variables.color-success}
+    bg-danger: ${theme.variables.color-danger}
+    bg-warning: ${theme.variables.color-warning}
+    bg-info: ${theme.variables.color-info}
+    bg-muted: '#ddd'
+    # dark mode
+    text-dark-normal: '#ddd'
+    text-dark-accent: '#eee'
+    text-dark-primary: ${theme.variables.text-primary}
+    text-dark-secondary: ${theme.variables.text-secondary}
+    text-dark-success: ${theme.variables.text-success}
+    text-dark-danger: ${theme.variables.text-danger}
+    text-dark-warning: ${theme.variables.text-warning}
+    text-dark-info: ${theme.variables.text-info}
+    text-dark-muted: '#999'
+    bg-dark-normal: '#333'
+    bg-dark-accent: '#222'
+    bg-dark-primary: ${theme.variables.bg-primary}
+    bg-dark-secondary: ${theme.variables.bg-secondary}
+    bg-dark-success: ${theme.variables.bg-success}
+    bg-dark-danger: ${theme.variables.bg-danger}
+    bg-dark-warning: ${theme.variables.bg-warning}
+    bg-dark-info: ${theme.variables.bg-info}
+    bg-dark-muted: '#555'

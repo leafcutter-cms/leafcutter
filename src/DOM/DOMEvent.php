@@ -1,9 +1,6 @@
 <?php
 namespace Leafcutter\DOM;
 
-use Leafcutter\Request;
-use Leafcutter\Response;
-
 class DOMEvent
 {
     protected $node;
@@ -11,15 +8,21 @@ class DOMEvent
     protected $response;
     protected $delete = false;
     protected $replacement;
+    protected $source;
 
     public function __construct(\DOMNode $node)
     {
         $this->node = $node;
     }
 
-    public function setReplacement(string $html=null)
+    public function setReplacement(string $html = null)
     {
         $this->replacement = $html;
+    }
+
+    public function setSource($source = null)
+    {
+        $this->source = $source;
     }
 
     public function setDelete(bool $set)
@@ -27,17 +30,22 @@ class DOMEvent
         $this->delete = $set;
     }
 
-    public function getNode() : \DOMNode
+    public function getSource()
+    {
+        return $this->source;
+    }
+
+    public function getNode(): \DOMNode
     {
         return $this->node;
     }
 
-    public function getReplacement() : ?string
+    public function getReplacement(): ?string
     {
         return $this->replacement;
     }
 
-    public function getDelete() : bool
+    public function getDelete(): bool
     {
         return $this->delete;
     }
