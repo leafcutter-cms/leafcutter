@@ -37,7 +37,7 @@ class URLFactory
         }
         // do comparison and redirect
         if ($currentCmp !== $actualCmp) {
-            location("Location: $current");
+            header("Location: $current");
         }
     }
 

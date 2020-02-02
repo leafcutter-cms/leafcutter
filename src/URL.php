@@ -387,13 +387,7 @@ class URL
     public function port(): int
     {
         if (!$this->port) {
-            if ($this->scheme() == 'https') {
-                return 443;
-            } elseif ($this->scheme() == 'http') {
-                return 80;
-            } else {
-                return $_SERVER['SERVER_PORT'];
-            }
+            return $_SERVER['SERVER_PORT'];
         }
         return $this->port;
     }
