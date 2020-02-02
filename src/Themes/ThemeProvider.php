@@ -141,37 +141,35 @@ class ThemeProvider
 
     public function onResponseContentReady($response)
     {
-        // load site CSS and JS files files
-        $context = $response->url()->sitePath();
-        // load all the root site files for null namespace if URL has a namespace
-        if ($namespace = $response->url()->siteNamespace()) {
-            foreach ($this->leafcutter->assets()->search("site.css") as $asset) {
-                $this->addCss($asset->hash(), $asset, 'site');
-            }
-            foreach ($this->leafcutter->assets()->search("site.js") as $asset) {
-                $this->addCss($asset->hash(), $asset, 'site');
-            }
+        // load _site CSS and JS files files
+        $context = $response->url()->siteFullPath();
+        // load root _site files
+        if ($asset = $this->leafcutter->assets()->get(new URL("/_site.css"))) {
+            $this->addCss($asset->hash(), $asset, 'site');
         }
-        // load all site files for parent directories
+        if ($asset = $this->leafcutter->assets()->get(new URL("/_site.js"))) {
+            $this->addJs($asset->hash(), $asset, 'site');
+        }
+        // load all _site files for parent directories
         $context = explode('/', $context);
         $check = '';
         foreach ($context as $c) {
             $check .= "$c/";
-            foreach ($this->leafcutter->assets()->search("{$check}site.css", $namespace) as $asset) {
+            if ($asset = $this->leafcutter->assets()->get(new URL("/{$check}_site.css"))) {
                 $this->addCss($asset->hash(), $asset, 'site');
             }
-            foreach ($this->leafcutter->assets()->search("{$check}site.js", $namespace) as $asset) {
-                $this->addCss($asset->hash(), $asset, 'site');
+            if ($asset = $this->leafcutter->assets()->get(new URL("/{$check}_site.js"))) {
+                $this->addJs($asset->hash(), $asset, 'site');
             }
         }
-        // load page CSS and JS files
+        // load _page CSS and JS files
         $context = $response->url()->siteFullPath();
         $context = preg_replace('@[^/]+$@', '', $context);
-        foreach ($this->leafcutter->assets()->search("{$context}page.css", $namespace) as $asset) {
+        if ($asset = $this->leafcutter->assets()->get(new URL("_page.css"))) {
             $this->addCss($asset->hash(), $asset, 'page');
         }
-        foreach ($this->leafcutter->assets()->search("{$context}page.js", $namespace) as $asset) {
-            $this->addCss($asset->hash(), $asset, 'page');
+        if ($asset = $this->leafcutter->assets()->get(new URL("_page.js"))) {
+            $this->addJs($asset->hash(), $asset, 'page');
         }
     }
 

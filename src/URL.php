@@ -46,10 +46,6 @@ class URL
             // set port
             if (@$parsed['port']) {
                 $this->setPort($parsed['port']);
-            } elseif ($this->scheme() == 'https') {
-                $this->setPort(443);
-            } else {
-                $this->setPort(80);
             }
             // path, query, fragment are now straightforward
             $this->setPath(@$parsed['path'] ?? '/');
@@ -394,8 +390,13 @@ class URL
             if ($site = URLFactory::site()) {
                 return $site->port();
             } else {
-                return 80;
-                throw new Exception("No site to get port from");
+                if ($this->scheme() == 'https') {
+                    $this->setPort(443);
+                } elseif ($this->scheme() == 'http') {
+                    $this->setPort(80);
+                } else {
+                    return $_SERVER['SERVER_PORT'];
+                }
             }
         }
         return $this->port;

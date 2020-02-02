@@ -24,8 +24,8 @@ class URLFactory
     {
         // get computed current URL, including fixing trailing slashes if necessary
         $current = ($current ?? self::current());
-        if ($fixSlashes && $current->siteFullPath() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $current->siteFullPath())) {
-            $current->setPath($current->siteFullPath() . '/');
+        if ($fixSlashes && $current->path() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $current->path())) {
+            $current->setPath($current->path() . '/');
         }
         $currentCmp = $current;
         // get actual current URL
@@ -37,8 +37,7 @@ class URLFactory
         }
         // do comparison and redirect
         if ($currentCmp !== $actualCmp) {
-            header("Location: $current");
-            exit();
+            location("Location: $current");
         }
     }
 
