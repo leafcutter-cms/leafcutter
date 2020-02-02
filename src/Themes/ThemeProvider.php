@@ -141,36 +141,36 @@ class ThemeProvider
 
     public function onResponseContentReady($response)
     {
-        // load _site CSS and JS files files
+        // load site CSS and JS files files
         $context = $response->url()->sitePath();
-        // load all the root _site files for null namespace if URL has a namespace
+        // load all the root site files for null namespace if URL has a namespace
         if ($namespace = $response->url()->siteNamespace()) {
-            foreach ($this->leafcutter->assets()->search("_site.css") as $asset) {
+            foreach ($this->leafcutter->assets()->search("site.css") as $asset) {
                 $this->addCss($asset->hash(), $asset, 'site');
             }
-            foreach ($this->leafcutter->assets()->search("_site.js") as $asset) {
+            foreach ($this->leafcutter->assets()->search("site.js") as $asset) {
                 $this->addCss($asset->hash(), $asset, 'site');
             }
         }
-        // load all _site files for parent directories
+        // load all site files for parent directories
         $context = explode('/', $context);
         $check = '';
         foreach ($context as $c) {
             $check .= "$c/";
-            foreach ($this->leafcutter->assets()->search("{$check}_site.css", $namespace) as $asset) {
+            foreach ($this->leafcutter->assets()->search("{$check}site.css", $namespace) as $asset) {
                 $this->addCss($asset->hash(), $asset, 'site');
             }
-            foreach ($this->leafcutter->assets()->search("{$check}_site.js", $namespace) as $asset) {
+            foreach ($this->leafcutter->assets()->search("{$check}site.js", $namespace) as $asset) {
                 $this->addCss($asset->hash(), $asset, 'site');
             }
         }
-        // load _page CSS and JS files
+        // load page CSS and JS files
         $context = $response->url()->siteFullPath();
         $context = preg_replace('@[^/]+$@', '', $context);
-        foreach ($this->leafcutter->assets()->search("{$context}_page.css", $namespace) as $asset) {
+        foreach ($this->leafcutter->assets()->search("{$context}page.css", $namespace) as $asset) {
             $this->addCss($asset->hash(), $asset, 'page');
         }
-        foreach ($this->leafcutter->assets()->search("{$context}_page.js", $namespace) as $asset) {
+        foreach ($this->leafcutter->assets()->search("{$context}page.js", $namespace) as $asset) {
             $this->addCss($asset->hash(), $asset, 'page');
         }
     }
