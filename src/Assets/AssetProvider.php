@@ -185,15 +185,13 @@ class AssetProvider
                 'onAssetReady',
                 $event
             );
-            //set output file
-            $asset = $event->asset();
-            $asset->setOutputFile(
+            //set output file and URL
+            $event->asset()->setPublicUrl(
+                $this->generatePublicUrl($asset)
+            );
+            $event->asset()->setOutputFile(
                 $this->generateOutputPath($asset)
             );
-        }
-        // trigger pre-return events
-        if ($asset) {
-            $event = new AssetEvent($asset, $url);
             $this->leafcutter->events()->dispatchEvent('onAssetReturn', $event);
             URLFactory::endContext();
             return $event->asset();

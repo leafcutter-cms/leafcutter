@@ -6,6 +6,7 @@ RewriteEngine On
 RewriteCond %{REQUEST_URI} !^/index\.php
 # and the requested path and file doesn't directly match a physical file
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 # internally rewrite the request to the index.php script
 RewriteRule .* index.php [L]
 
