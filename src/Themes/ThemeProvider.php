@@ -67,7 +67,7 @@ class ThemeProvider
         }
         $this->loadedThemes[] = $dir;
         $config = new Config([
-            'theme.prefix' => "/@themes/$themeName/",
+            'theme.prefix' => "/~themes/$themeName/",
         ]);
         $config->readFile($yaml);
         //set up advanced files (these don't get prefixed by theme name)
@@ -317,7 +317,7 @@ class ThemeProvider
                 $content = implode(PHP_EOL, $content);
                 $filename = $e['media'] . '-' . hash('crc32', $content) . '.' . $ext;
                 $bundled["bundle $k: $filename"] = [
-                    'source' => $this->leafcutter->assets()->getFromString($content, new URL('@/@themes/' . $filename)),
+                    'source' => $this->leafcutter->assets()->getFromString($content, new URL('@/~themes/' . $filename)),
                     'crossorigin' => null,
                     'integrity' => null,
                     'type' => $e['type'],

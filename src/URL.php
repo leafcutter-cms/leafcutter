@@ -161,7 +161,7 @@ class URL
     public function siteNamespace(): ?string
     {
         if ($path = $this->siteFullPath()) {
-            $ns = preg_replace('/^@([^\/]+)\/.*$/', '$1', $path);
+            $ns = preg_replace('/^~([^\/]+)\/.*$/', '$1', $path);
             return $ns != $path ? $ns : null;
         } else {
             return null;

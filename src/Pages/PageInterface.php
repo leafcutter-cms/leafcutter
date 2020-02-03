@@ -10,7 +10,7 @@ interface PageInterface
     public function url(): URL;
     public function setUrl(URL $url);
     public function content(): string;
-    public function setContent(string $content);
+    public function setContent($content);
     public function hash(): string;
     public function children(): Collection;
     public function parent(): ?PageInterface;
