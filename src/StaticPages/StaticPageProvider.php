@@ -76,7 +76,7 @@ class StaticPageProvider
         if ($path = $this->savePath($response)) {
             $url = $response->source()->url();
             $content = $response->content();
-            $scriptURL = new URL('@/@staticAsyncCheck/' . $response->source()->url()->sitePath());
+            $scriptURL = new URL('@/~staticAsyncCheck/' . $response->source()->url()->sitePath());
             $meta = json_encode([
                 'hash' => $this->leafcutter->content()->hash($url->sitePath(), $url->siteNamespace()),
                 'time' => time(),

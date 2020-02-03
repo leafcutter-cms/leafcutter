@@ -17,12 +17,15 @@ assets:
     url: '@/assets/'
 
 statics:
-  enabled: true
+  enabled: false
   directory: '${base_dir}'
   ttl: 60
 
 theme:
   css:
     bundle: true
+    max_inlined: 102400
+    minify: true
   js:
     bundle: true
+    minify: true

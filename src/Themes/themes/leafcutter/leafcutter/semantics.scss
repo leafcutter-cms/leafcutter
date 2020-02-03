@@ -76,9 +76,11 @@ ul,
 ol {
     padding: 0;
     @include padding-l;
+
     ul,
     ol {
         margin: 0;
+
         li {
             margin: 0;
         }
@@ -89,12 +91,15 @@ li {
     margin: 0;
     padding: 0;
     @include margin-y-sm;
+
     &:first-child {
         margin-top: 0;
     }
+
     &:last-child {
         margin-bottom: 0;
     }
+
     &::marker {
         @include text-normal;
     }
@@ -131,6 +136,7 @@ dd {
     margin: 0;
     @include padding-l;
     @include padding-b;
+
     &:last-child {
         padding-bottom: 0;
     }
@@ -139,6 +145,7 @@ dd {
 aside {
     @include font-size-sm;
     line-height: $line-height;
+
     h1,
     h2,
     h3,
@@ -174,33 +181,4 @@ i,
 em,
 strong {
     @include text-accent;
-}
-
-a {
-    @include a-link;
-    &:visited {
-        @include a-visited;
-    }
-    &:focus {
-        @include a-focus;
-        @include focus-indicator;
-        text-decoration: underline;
-    }
-    &:hover {
-        @include a-hover;
-        text-decoration: underline;
-    }
-    &:active {
-        @include a-active;
-        text-decoration: underline;
-    }
-    h1 &,
-    h2 &,
-    h3 &,
-    h4 &,
-    h5 &,
-    h6 & {
-        color: inherit;
-        text-decoration: none;
-    }
 }

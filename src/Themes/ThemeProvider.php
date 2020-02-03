@@ -233,7 +233,7 @@ class ThemeProvider
                     $media = ' media="' . $media . '"';
                 }
                 if ($e['source'] instanceof AssetInterface) {
-                    if ($e['media'] != 'library' && $this->inlined + $e['source']->size() <= $this->leafcutter->config('css.max_inlined')) {
+                    if ($e['media'] != 'library' && $this->inlined + $e['source']->size() <= $this->leafcutter->config('theme.css.max_inlined')) {
                         $this->inlined += $e['source']->size();
                         $e = '<style type="text/css"' . $media . '>' . PHP_EOL
                         . $e['source']->content()

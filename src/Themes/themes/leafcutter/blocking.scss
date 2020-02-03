@@ -132,3 +132,36 @@ nav {
         transform: rotate(360deg);
     }
 }
+
+a {
+    @include a-link;
+
+    &:visited {
+        @include a-visited;
+    }
+
+    &:focus {
+        @include a-focus;
+        text-decoration: underline;
+    }
+
+    &:hover {
+        @include a-hover;
+        text-decoration: underline;
+    }
+
+    &:active {
+        @include a-active;
+        text-decoration: underline;
+    }
+
+    h1 &,
+    h2 &,
+    h3 &,
+    h4 &,
+    h5 &,
+    h6 & {
+        color: inherit;
+        text-decoration: none;
+    }
+}

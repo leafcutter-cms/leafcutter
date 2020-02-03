@@ -49,6 +49,13 @@ images:
       crop: 144
 
 theme:
+  css:
+    bundle: false
+    max_inlined: 0
+    minify: false
+  js:
+    bundle: false
+    minify: false
   variables:
     # sizing
     margin: 2rem
@@ -68,13 +75,13 @@ theme:
     color-warning: '#FF9800'
     color-info: '#00BCD4'
     # link colors
-    color-a: ${theme.variables.text-primary}
-    color-a-visited: ${theme.variables.text-secondary}
-    color-a-focus: ${theme.variables.text-info}
-    color-a-hover: ${theme.variables.text-info}
+    color-a: '#1a0dab'
+    color-a-visited: '#609'
+    color-a-focus: '${theme.variables.text-info}'
+    color-a-hover: ${theme.variables.text-primary}
     color-a-active: ${theme.variables.text-success}
-    color-dark-a: ${theme.variables.text-dark-primary}
-    color-dark-a-visited: ${theme.variables.text-dark-secondary}
+    color-dark-a: '#1a0dab'
+    color-dark-a-visited: '#609'
     color-dark-a-focus: ${theme.variables.text-dark-info}
     color-dark-a-hover: ${theme.variables.text-dark-info}
     color-dark-a-active: ${theme.variables.text-dark-success}
@@ -88,8 +95,8 @@ theme:
     text-warning: ${theme.variables.color-warning}
     text-info: ${theme.variables.color-info}
     text-muted: '#999'
-    bg-normal: '#eee'
-    bg-accent: '#fff'
+    bg-normal: '#fafafa'
+    bg-accent: '#eee'
     bg-primary: ${theme.variables.color-primary}
     bg-secondary: ${theme.variables.color-secondary}
     bg-success: ${theme.variables.color-success}
