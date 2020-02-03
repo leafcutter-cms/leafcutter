@@ -43,7 +43,7 @@ class ImageAsset extends AbstractAsset
 
     public function hash(): string
     {
-        return hash('crc32', serialize([
+        return hash('md5', serialize([
             $this->url()->query(),
             basename($this->source),
             filesize($this->source),

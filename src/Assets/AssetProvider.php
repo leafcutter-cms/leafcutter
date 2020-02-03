@@ -39,7 +39,7 @@ class AssetProvider
     public function getFromString(string $content, URL $url = null, string $extension = null): AssetInterface
     {
         if (!$url) {
-            $url = new URL('@/@stringassets/' . hash('crc32', $content) . '.' . $extension);
+            $url = new URL('@/@stringassets/' . hash('md5', $content) . '.' . $extension);
         }
         $asset = new StringAsset($url, $content);
         return $this->finalize($asset, $url);

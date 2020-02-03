@@ -45,7 +45,7 @@ class ContentProvider implements ContentProviderInterface
             }
         } while (array_pop($currentPath) !== null);
         // final hash and return
-        return hash('crc32', implode('', $hash));
+        return hash('md5', implode('', $hash));
     }
 
     public function addDirectory(string $directory, string $namespace = null)

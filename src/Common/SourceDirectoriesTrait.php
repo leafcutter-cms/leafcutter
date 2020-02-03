@@ -51,7 +51,7 @@ trait SourceDirectoriesTrait
     public function sourceDirectoryHash(): string
     {
         if ($this->sourceDirectoryHash === null) {
-            $this->sourceDirectoryHash = hash('crc32', serialize($this->sourceDirectories()));
+            $this->sourceDirectoryHash = hash('md5', serialize($this->sourceDirectories()));
         }
         return $this->sourceDirectoryHash;
     }

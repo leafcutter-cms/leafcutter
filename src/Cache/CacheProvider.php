@@ -85,7 +85,7 @@ class CacheProvider implements CacheInterface
     protected function hashUrl(\Leafcutter\URL $url): string
     {
         return hash(
-            'crc32',
+            'md5',
             serialize([
                 $url->__toString(),
                 $this->leafcutter->content()->hash(

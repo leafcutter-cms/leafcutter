@@ -14,7 +14,7 @@ class ContentDirectoryProvider implements ContentProviderInterface
         foreach ($this->directories($path) as $content) {
             $hash[$content->path()] = filemtime($content->path());
         }
-        return hash('crc32', serialize($hash));
+        return hash('md5', serialize($hash));
     }
 
     public function files(string $path): array

@@ -436,7 +436,7 @@ class ThemeProvider
                     }
                 }
                 $content = implode(PHP_EOL, $content);
-                $filename = $e['media'] . '-' . hash('crc32', $content) . '.' . $ext;
+                $filename = $e['media'] . '-' . hash('md5', $content) . '.' . $ext;
                 $bundled["bundle $k: $filename"] = [
                     'source' => $this->leafcutter->assets()->getFromString($content, new URL('@/~themes/' . $filename)),
                     'crossorigin' => null,

@@ -21,7 +21,7 @@ class StringAsset extends AbstractAsset
 
     public function hash(): string
     {
-        return hash('crc32', $this->content);
+        return hash('md5', $this->content);
     }
 
     public function size(): int

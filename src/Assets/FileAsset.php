@@ -26,7 +26,7 @@ class FileAsset extends AbstractAsset
 
     public function hash(): string
     {
-        return hash_file('crc32', $this->file);
+        return hash_file('md5', $this->file);
     }
 
     public function setOutputFile(string $path)

@@ -111,7 +111,7 @@ abstract class AbstractAsset implements AssetInterface
 
     public function hash(): string
     {
-        return hash('crc32', serialize([
+        return hash('md5', serialize([
             $this->content(),
         ]));
     }

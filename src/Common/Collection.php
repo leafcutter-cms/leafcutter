@@ -25,7 +25,7 @@ class Collection implements \Iterator, \Countable
             }
         }
         sort($hash);
-        return hash('crc32', serialize($hash));
+        return hash('md5', serialize($hash));
     }
 
     public function tail()

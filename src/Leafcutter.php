@@ -128,7 +128,7 @@ class Leafcutter
 
     public function hash(): string
     {
-        return hash('crc32', filemtime(__DIR__) . $this->config->hash());
+        return hash('md5', filemtime(__DIR__) . $this->config->hash());
     }
 
     /**

@@ -16,7 +16,7 @@ class Config extends BaseConfig
 
     public function hash(): string
     {
-        return hash('crc32', serialize($this->get()));
+        return hash('md5', serialize($this->get()));
     }
 
     /**
