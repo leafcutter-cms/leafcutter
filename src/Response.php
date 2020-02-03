@@ -38,7 +38,7 @@ class Response
 
     public function setMime(string $mime)
     {
-        $this->header('content-type: ' . $mime . '; charset=utf-8');
+        $this->header('content-type', $mime . '; charset=utf-8');
     }
 
     public function dynamic(): bool
