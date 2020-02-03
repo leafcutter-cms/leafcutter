@@ -18,7 +18,8 @@
         "imagine/imagine": "~1",
         "chrisjean/php-ico": "~1",
         "tedivm/stash": "0.14.*",
-        "symfony/yaml": "~4"
+        "symfony/yaml": "~4",
+        "matthiasmullie/minify": "~1"
     },
     "autoload": {
         "psr-4": {

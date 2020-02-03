@@ -17,9 +17,9 @@ class ImageProvider
 
     private $leafcutter;
     private $saveOptions = [
-        'jpeg_quality' => 80,
+        'jpeg_quality' => 90,
         'png_compression_level' => 9,
-        'webp_quality' => 80,
+        'webp_quality' => 90,
     ];
 
     public function __construct(Leafcutter $leafcutter)
@@ -38,13 +38,12 @@ class ImageProvider
     public function onResponseURL(URL $url): ?Response
     {
         if ($url->siteFullPath() == 'favicon.ico') {
-            if ($icons = $this->search("favicon.*", ['format' => 'ico', 'ico_sizes' => '16,32'])->sortBy('date.modified', true)) {
+            if ($icons = $this->search("favicon.*")) {
                 $icon = $icons->tail();
+                $asset = $icon->query(['format' => 'ico', 'ico_sizes' => '16,32']);
                 $response = new Response();
                 $response->setTemplate(null);
-                $response->setText($icon->content());
-                $response->header('content-type', $icon->mime());
-                $response->header('content-disposition', 'inline; filename="favicon.ico"');
+                $response->redirect($asset->publicUrl());
                 return $response;
             }
         }
@@ -146,14 +145,22 @@ class ImageProvider
         $url = $event->url();
         $query = $this->normalizeQuery($event->path(), $url->query());
         $url->setQuery($query);
-        $source = $event->path();
+        $source = $this->buildMaxResolutionSource($event->path());
         $asset = new ImageAsset($url, $source);
-        if ($asset->extension() != $query['format']) {
-            $filename = $asset->filename();
-            $filename = preg_replace('@\.[a-z]+$@', '.' . $query['format'], $filename);
-            $asset->setFilename($filename);
-        }
+        //explicitly set filename
+        $filename = $asset->filename();
+        $filename = preg_replace('@\.[a-z]+$@', '.' . $query['format'], $filename);
+        $asset->setFilename($filename);
         return $asset;
+    }
+
+    protected function buildMaxResolutionSource(string $source): string
+    {
+        $hash = hash_file('crc32', $source);
+        $hash = preg_replace("/^(.{1})(.{2})(.{2})/", "$1/$2/$3/", $hash) . '/';
+        $dest = $this->leafcutter->config('assets.output.directory') . $hash . basename($source) . '-maxresolution.png';
+        $this->generate($source, $dest, $this->normalizeQuery($dest, $this->leafcutter->config("images.presets.maxresolution")));
+        return $dest;
     }
 
     protected function normalizeQuery(string $source, array $query): array

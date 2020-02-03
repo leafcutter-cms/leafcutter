@@ -41,8 +41,10 @@ templates:
 images:
   driver: gd # options are gd, imagick, or gmagick
   presets:
-    default:
-      fit: 1000
+    default: []
+    maxresolution:
+      fit: 1920
+      format: png
     full:
       fit: 1920
     thumbnail:
