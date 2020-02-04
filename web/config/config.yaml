@@ -29,3 +29,4 @@ theme:
   js:
     bundle: true
     minify: true
+    inline_loader: true

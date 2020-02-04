@@ -316,11 +316,42 @@ class ThemeProvider
         foreach ($this->cssMedias as $m) {
             $html[] = $this->cssHtml($this->filter('css', $m));
         }
-        foreach ($this->jsMedias as $m) {
-            $html[] = $this->jsHtml($this->filter('js', $m, false));
-            $html[] = $this->jsHtml($this->filter('js', $m, true));
+        //javascript may either load manually, or with an inline loader
+        if ($this->leafcutter->config('theme.js.inline_loader')) {
+            // build an inline script to asynchronously load all the scripts, but in the correct order
+            $html[] = $this->jsLoader($this->filter('js'));
+        } else {
+            // load individual scripts as HTML, in a very normal way
+            foreach ($this->jsMedias as $m) {
+                $html[] = $this->jsHtml($this->filter('js', $m, false));
+                $html[] = $this->jsHtml($this->filter('js', $m, true));
+            }
         }
         return implode(PHP_EOL, array_filter($html));
+    }
+
+    protected function jsLoader($arr)
+    {
+        $script = file_get_contents(__DIR__ . '/loader.js');
+        $outside = [];
+        $ordered = [];
+        $async = [];
+        foreach ($arr as $name => $e) {
+            if ($e['source'] instanceof AssetInterface) {
+                if ($e['async']) {
+                    $async[] = $e['source']->publicUrl()->__toString();
+                } else {
+                    $ordered[] = $e['source']->publicUrl()->__toString();
+                }
+            } else {
+                $outside[$name] = $e['source'];
+            }
+        }
+        //set up script with JSON lists of files to be loaded
+        $script = str_replace('/*$ordered*/', json_encode($ordered), $script);
+        $script = str_replace('/*$async*/', json_encode($async), $script);
+        $asset = $this->leafcutter->assets()->getFromString($script, null, 'js');
+        return $this->jsHtml($outside) . PHP_EOL . "<script>" . $asset->content() . "</script>";
     }
 
     protected function filter(string $type, string $media = null, bool $async = null)
@@ -354,6 +385,7 @@ class ThemeProvider
                     $media = ' media="' . $media . '"';
                 }
                 if ($e['source'] instanceof AssetInterface) {
+                    # Note that libraries aren't inlined, because theoretically they should stay very consistent across multiple pages
                     if ($e['media'] != 'library' && $this->inlined + $e['source']->size() <= $this->leafcutter->config('theme.css.max_inlined')) {
                         $this->inlined += $e['source']->size();
                         $e = '<style type="text/css"' . $media . '>' . PHP_EOL

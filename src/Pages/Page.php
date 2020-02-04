@@ -88,6 +88,11 @@ class Page implements PageInterface
         return $this->meta[$key];
     }
 
+    public function metaMerge(array $meta, $overwrite = false)
+    {
+        $this->meta->merge($meta, null, $overwrite);
+    }
+
     public function url(): URL
     {
         return clone $this->url;
@@ -101,7 +106,7 @@ class Page implements PageInterface
     public function content($wrap = true): string
     {
         if (is_callable($this->content)) {
-            $this->content = ($this->content)();
+            $this->setContent(($this->content)());
         }
         if ($wrap) {
             return '<!--@beginContext:' . $this->url() . '-->' . $this->content . '<!--@endContext-->';
@@ -112,6 +117,11 @@ class Page implements PageInterface
     public function setContent($content)
     {
         if (is_string($content)) {
+            $event = new PageContentEvent($this, $content);
+            Leafcutter::get()->events()->dispatchAll(
+                'onPageContentString',
+                $event
+            );
             $content = preg_replace_callback('/<!--@meta(.+?)-->/ms', function ($match) {
                 try {
                     $meta = Yaml::parse($match[1]);
@@ -124,6 +134,7 @@ class Page implements PageInterface
             if (!$this->meta['name'] && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
                 $this->meta['name'] = trim(strip_tags($matches[1]));
             }
+            $content = $event->content();
         }
         $this->content = $content;
     }

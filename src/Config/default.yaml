@@ -58,6 +58,7 @@ theme:
   js:
     bundle: false
     minify: false
+    inline_loader: false
   variables:
     # sizing
     margin: 2rem

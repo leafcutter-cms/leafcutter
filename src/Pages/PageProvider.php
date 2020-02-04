@@ -18,6 +18,24 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
+    public function onPageContentString(PageContentEvent $event)
+    {
+        $content = $event->content();
+        $page = $event->page();
+        $content = preg_replace_callback('/<!--@meta(.+?)-->/ms', function ($match) use ($page) {
+            try {
+                $meta = Yaml::parse($match[1]);
+                $page->metaMerge($meta);
+            } catch (\Throwable $th) {
+                // throw $th;
+            }
+            return '';
+        }, $content);
+        if (!$page->meta('name') && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
+            $page->meta('name', trim(strip_tags($matches[1])));
+        }
+    }
+
     public function breadcrumb(PageInterface $page): array
     {
         $current = null;
