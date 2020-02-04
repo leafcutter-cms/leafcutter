@@ -332,6 +332,13 @@ class ThemeProvider
 
     protected function jsLoader($arr)
     {
+        // filter and bundle JS
+        $arr = array_filter($arr);
+        if ($this->leafcutter->config('theme.js.bundle')) {
+            $arr = $this->bundle_assets($arr, 'js');
+        }
+        $arr = array_filter($arr);
+        // build loader script
         $script = file_get_contents(__DIR__ . '/loader.js');
         $outside = [];
         $ordered = [];
@@ -413,7 +420,6 @@ class ThemeProvider
         if ($this->leafcutter->config('theme.js.bundle')) {
             $arr = $this->bundle_assets($arr, 'js');
         }
-        $arr = array_filter($arr);
         $arr = array_filter($arr);
         array_walk(
             $arr,
