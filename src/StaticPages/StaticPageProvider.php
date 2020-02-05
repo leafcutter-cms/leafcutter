@@ -24,19 +24,20 @@ class StaticPageProvider
         $response = new Response();
         $response->setMime('application/javascript');
         $response->setTemplate(null);
+        $response->header('cache-control', 'max-age=60, public');
         if ($this->needsRebuild($rUrl)) {
             if (is_file($this->urlSavePath($rUrl)) && !$this->leafcutter->config('statics.enabled')) {
-                $response->setText('console.log("static page cache disabled, deleting this file");');
+                $response->setText('');
                 unlink($this->urlSavePath($rUrl));
                 return $response;
             }
             $this->leafcutter->buildResponse($rUrl, false);
-            $response->setText('console.log("doing background rebuild");');
+            $response->setText('');
             $response->doAfter(function () use ($rUrl) {
                 $this->leafcutter->buildResponse($rUrl, false);
             });
         } else {
-            $response->setText('console.log("no rebuild required");');
+            $response->setText('');
         }
         return $response;
     }
@@ -87,7 +88,7 @@ class StaticPageProvider
 <script src='$scriptURL' async defer></script>
 
 EOS;
-            $content = str_replace('<head>', "<head>$script", $content, $matches);
+            $content = str_replace('</body>', "$script</body>", $content, $matches);
             if ($matches != 1) {
                 return;
             }
