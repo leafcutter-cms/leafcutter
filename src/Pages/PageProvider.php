@@ -59,16 +59,18 @@ class PageProvider
             return null;
         }
         $path = dirname($page->url()->siteFullPath());
-        while ($path != '') {
-            if ($page = $this->get(new URL($path))) {
+        while (true) {
+            if ($path == '.') {
+                return $this->get(new URL("@/"));
+            }
+            if ($page = $this->get(new URL("@/$path"))) {
                 return $page;
+            }
+            $ppath = dirname($path);
+            if ($ppath == $path) {
+                break;
             } else {
-                $ppath = dirname($path);
-                if ($ppath == $path) {
-                    break;
-                } else {
-                    $path = $ppath;
-                }
+                $path = $ppath;
             }
         }
         return null;
@@ -77,7 +79,7 @@ class PageProvider
     public function children(URL $url): Collection
     {
         $search = preg_replace('@[^\/]+$@', '', $url->siteFullPath()) . '*';
-        return $this->search($search);
+        return $this->search($search, $url->siteNamespace());
     }
 
     public function search(string $glob, string $namespace = null): Collection

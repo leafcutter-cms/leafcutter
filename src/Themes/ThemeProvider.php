@@ -188,7 +188,7 @@ class ThemeProvider
         }
         $this->loadedThemes[] = $dir;
         $config = new Config([
-            'theme.prefix' => "/~themes/$themeName/",
+            'theme.prefix' => "@/~themes/$themeName/",
         ]);
         $config->readFile($yaml);
         //set up advanced files (these don't get prefixed by theme name)
@@ -265,10 +265,10 @@ class ThemeProvider
         // load _site CSS and JS files files
         $context = $response->url()->siteFullPath();
         // load root _site files
-        if ($asset = $this->leafcutter->assets()->get(new URL("/_site.css"))) {
+        if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.css"))) {
             $this->addCss($asset->hash(), $asset, 'site');
         }
-        if ($asset = $this->leafcutter->assets()->get(new URL("/_site.js"))) {
+        if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.js"))) {
             $this->addJs($asset->hash(), $asset, 'site');
         }
         // load all _site files for parent directories
@@ -276,10 +276,10 @@ class ThemeProvider
         $check = '';
         foreach ($context as $c) {
             $check .= "$c/";
-            if ($asset = $this->leafcutter->assets()->get(new URL("/{$check}_site.css"))) {
+            if ($asset = $this->leafcutter->assets()->get(new URL("@/{$check}_site.css"))) {
                 $this->addCss($asset->hash(), $asset, 'site');
             }
-            if ($asset = $this->leafcutter->assets()->get(new URL("/{$check}_site.js"))) {
+            if ($asset = $this->leafcutter->assets()->get(new URL("@/{$check}_site.js"))) {
                 $this->addJs($asset->hash(), $asset, 'site');
             }
         }
@@ -351,7 +351,7 @@ class ThemeProvider
                     $ordered[] = $e['source']->publicUrl()->__toString();
                 }
             } else {
-                $outside[$name] = $e['source'];
+                $outside[$name] = $e;
             }
         }
         //set up script with JSON lists of files to be loaded

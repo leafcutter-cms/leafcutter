@@ -1,5 +1,5 @@
 site:
-  url: 'https://localhost:8000/'
+  url: 'http://localhost/leafcutter/web/'
 
 templates:
   site:
@@ -23,10 +23,10 @@ statics:
 
 theme:
   css:
-    bundle: true
-    max_inlined: 102400
-    minify: true
+    bundle: false
+    max_inlined: 0
+    minify: false
   js:
-    bundle: true
-    minify: true
-    inline_loader: true
+    bundle: false
+    minify: false
+    inline_loader: false

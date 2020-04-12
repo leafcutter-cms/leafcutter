@@ -74,7 +74,7 @@ class ContentDirectoryProvider implements ContentProviderInterface
     {
         $file = str_replace('\\', '/', $file);
         $file = substr($file, strlen($this->directory));
-        return $file;
+        return "@/$file";
     }
 
     public function __construct(string $directory)
