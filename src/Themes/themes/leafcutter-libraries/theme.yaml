@@ -1,0 +1,31 @@
+packages:
+  # package for loading jquery UI and a theme
+  jquery-ui:
+    require:
+      - jquery
+    require-after:
+      - jquery-ui-theme
+    js:
+      library:
+        jquery-ui: jquery/jquery-ui.js
+    css:
+      library:
+        jquery-ui: jquery/jquery-ui.css
+        jquery-ui-structure: jquery/jquery-ui.structure.css
+  # package for loading jquery UI theme, shouldn't be called directly
+  jquery-ui-theme:
+    require:
+      - jquery-ui-structure
+    css:
+      library:
+        jquery-ui-theme: jquery/jquery-ui.theme.css
+  # package for loading just jQuery
+  jquery:
+    js:
+      library:
+        jquery: jquery/jquery.js
+  # package for loading just the CSS of fontawesome
+  fontawesome:
+    css:
+      library:
+        fontawesome: fontawesome/css/all.min.css

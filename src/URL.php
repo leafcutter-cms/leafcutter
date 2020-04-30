@@ -84,6 +84,16 @@ class URL
     }
 
     /**
+     * Return a string to be used in logging contexts
+     *
+     * @return void
+     */
+    public function logString()
+    {
+        return $this->__toString();
+    }
+
+    /**
      * Get just the file extension of the URL's path
      *
      * @return string|null

@@ -16,10 +16,10 @@ assets:
     directory: '${base_dir}/assets/'
     url: '@/assets/'
 
-statics:
-  enabled: false
-  directory: '${base_dir}'
-  ttl: 60
+plugins:
+  system_staticpages:
+    enabled: false
+    ttl: 30
 
 theme:
   css:

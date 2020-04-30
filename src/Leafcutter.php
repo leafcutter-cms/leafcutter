@@ -1,6 +1,8 @@
 <?php
 namespace Leafcutter;
 
+use Monolog\Logger;
+
 class Leafcutter
 {
     private static $instances = [];
@@ -8,6 +10,7 @@ class Leafcutter
 
     private function __construct(Config\Config $config = null)
     {
+        $this->logger = new Logger('leafcutter');
         $this->config = $config ?? new Config\Config();
         $this->events = new Events\EventProvider($this);
         $this->cache = new Cache\CacheProvider($this);
@@ -18,7 +21,11 @@ class Leafcutter
         $this->templates = new Templates\TemplateProvider($this);
         $this->theme = new Themes\ThemeProvider($this);
         $this->dom = new DOM\DOMProvider($this);
-        $this->statics = new StaticPages\StaticPageProvider($this);
+        $this->plugins = new Plugins\PluginProvider($this);
+    }
+
+    public function logger(): Logger {
+        return $this->logger;
     }
 
     public function theme(): Themes\ThemeProvider
@@ -26,9 +33,14 @@ class Leafcutter
         return $this->theme;
     }
 
-    public function statics(): StaticPages\StaticPageProvider
+    public function plugins(): Plugins\PluginProvider
     {
-        return $this->statics;
+        return $this->plugins;
+    }
+
+    public function plugin(string $name): ?Plugins\PluginInterface
+    {
+        return $this->plugins()->get($name);
     }
 
     public function find(string $path)
@@ -106,8 +118,11 @@ class Leafcutter
         return $this->templates;
     }
 
-    public function config(string $key)
+    public function config(string $key = null)
     {
+        if ($key === null) {
+            return $this->config;
+        }
         return $this->config[$key];
     }
 

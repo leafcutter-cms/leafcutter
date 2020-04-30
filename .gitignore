@@ -1,6 +1,7 @@
 /vendor
 /composer.lock
 *.ignore
+*.log
 
 /web/assets
 /web/cache

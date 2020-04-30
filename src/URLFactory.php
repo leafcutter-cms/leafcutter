@@ -23,13 +23,13 @@ class URLFactory
     public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true)
     {
         // get computed current URL, including fixing trailing slashes if necessary
-        $current = ($current ?? self::current());
+        $current = ($current ?? static::current());
         if ($fixSlashes && $current->path() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $current->path())) {
             $current->setPath($current->path() . '/');
         }
         $currentCmp = $current;
         // get actual current URL
-        $actual = $actualCmp = self::currentActual();
+        $actual = $actualCmp = static::currentActual();
         // strip scheme if not needed
         if (!$useScheme) {
             $currentCmp = preg_replace('/^https?:/', ':', $current);
@@ -64,7 +64,7 @@ class URLFactory
      */
     public static function beginSite(string $base)
     {
-        self::$site[] = new URL($base);
+        static::$site[] = new URL($base);
     }
 
     /**
@@ -74,8 +74,8 @@ class URLFactory
      */
     public static function site(): ?URL
     {
-        if (self::$site) {
-            return clone end(self::$site);
+        if (static::$site) {
+            return clone end(static::$site);
         } else {
             return null;
         }
@@ -88,7 +88,7 @@ class URLFactory
      */
     public static function endSite()
     {
-        array_pop(self::$site);
+        array_pop(static::$site);
     }
 
     /**
@@ -106,9 +106,9 @@ class URLFactory
     public static function beginContext($context = null)
     {
         if (!$context) {
-            $context = self::site();
+            $context = static::site();
         }
-        self::$context[] = self::normalize($context);
+        static::$context[] = static::normalize($context);
     }
 
     /**
@@ -118,10 +118,10 @@ class URLFactory
      */
     public static function context(): ?URL
     {
-        if (self::$context) {
-            return clone end(self::$context);
+        if (static::$context) {
+            return clone end(static::$context);
         } else {
-            return self::site();
+            return static::site();
         }
     }
 
@@ -132,7 +132,7 @@ class URLFactory
      */
     public static function endContext()
     {
-        array_pop(self::$context);
+        array_pop(static::$context);
     }
 
     /**
@@ -147,7 +147,7 @@ class URLFactory
             $input = clone $input;
             return $input;
         } else {
-            return self::normalize(new URL($input));
+            return static::normalize(new URL($input));
         }
     }
 

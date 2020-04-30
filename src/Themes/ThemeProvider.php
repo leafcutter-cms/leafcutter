@@ -7,6 +7,8 @@ use Leafcutter\Assets\AssetFileEvent;
 use Leafcutter\Assets\AssetInterface;
 use Leafcutter\Assets\StringAsset;
 use Leafcutter\Leafcutter;
+use Leafcutter\Pages\PageInterface;
+use Leafcutter\Response;
 use Leafcutter\URL;
 use Leafcutter\URLFactory;
 use MatthiasMullie\Minify;
@@ -16,6 +18,7 @@ class ThemeProvider
     protected $leafcutter;
     protected $directories = [];
     protected $assets = [];
+    protected $packages = [];
     protected $mediaAliases = [
         'blocking' => 'all',
         'library' => 'all',
@@ -50,6 +53,7 @@ class ThemeProvider
         $this->variables = new ThemeVariables($leafcutter);
         $this->addDirectory(__DIR__ . '/themes');
         $leafcutter->events()->addSubscriber($this);
+        $this->loadTheme('leafcutter-libraries');
     }
 
     /**
@@ -69,11 +73,15 @@ class ThemeProvider
                 if ($matches[2] != $matches[4]) {
                     return $matches[0];
                 }
+                //skip data urls
+                if (substr($matches[3], 0, 5) == 'data:') {
+                    return $matches[0];
+                }
                 //get the parts neeeded
                 $url = new URL($matches[3]);
                 $mediaQuery = @$matches[6];
                 //get url from matches
-                if ($asset = $this->get($url)) {
+                if ($asset = $this->leafcutter->assets()->get($url)) {
                     return '@import url(' . $asset->publicUrl() . ') ' . $mediaQuery . ';';
                 } else {
                     return $matches[0];
@@ -87,6 +95,10 @@ class ThemeProvider
             function ($matches) {
                 // quotes must match or it's malformed
                 if ($matches[1] != $matches[3]) {
+                    return $matches[0];
+                }
+                //skip data urls
+                if (substr($matches[2], 0, 5) == 'data:') {
                     return $matches[0];
                 }
                 //get url from matches
@@ -149,17 +161,28 @@ class ThemeProvider
         // set up import callback for getting import files
         $compiler->setImportPaths([]);
         $compiler->addImportPath(function ($path) {
+            $this->leafcutter->logger()->debug('SCSS import: '.$path);
             // try to include a raw scss file if possible
             $url = new URL($path);
-            foreach ($this->leafcutter->content()->files($url->sitePath(), $url->siteNamespace()) as $file) {
-                if (substr($file->path(), -5) == '.scss') {
-                    return $file->path();
+            if ($url->sitePath()) {
+                foreach ($this->leafcutter->content()->files($url->sitePath(), $url->siteNamespace()) as $file) {
+                    $this->leafcutter->logger()->debug('Possible file match: '.$file->path());
+                    if (substr($file->path(), -5) == '.scss') {
+                        $this->leafcutter->logger()->debug('Matched: '.$file->path());
+                        return $file->path();
+                    }
                 }
             }
             // otherwise try to find CSS-ey files
-            if ($asset = $this->get($url) && $asset->extension() == 'css') {
-                return $asset->outputFile();
+            if ($asset = $this->leafcutter->assets()->get($url)) {
+                $this->leafcutter->logger()->debug('Possible asset match: '.$asset->publicUrl());
+                if ($asset->extension() == 'css') {
+                    $this->leafcutter->logger()->debug('Matched: '.$asset->publicUrl());
+                    return $asset->outputFile();
+                }
             }
+            // log failure
+            $this->leafcutter->logger()->error('Failed to load SCSS import file '.$path);
         });
         // set context, compile and output
         URLFactory::beginContext($event->url());
@@ -170,6 +193,7 @@ class ThemeProvider
 
     public function loadTheme(string $name)
     {
+        $this->leafcutter->logger()->debug('ThemeProvider: loadTheme: ' . $name);
         $name = preg_replace('/[^a-z0-9\-_]/', '', $name);
         foreach ($this->directories as $dir) {
             $dir = "$dir/$name";
@@ -180,17 +204,20 @@ class ThemeProvider
         }
     }
 
-    protected function doLoadTheme($dir, $yaml)
+    public function loadPackage(string $name)
     {
-        $themeName = basename($dir);
-        if (in_array($dir, $this->loadedThemes)) {
-            return;
+        $this->leafcutter->logger()->debug('ThemeProvider: loadPackage: ' . $name);
+        if (isset($this->packages[$name])) {
+            $this->loadPackageFromConfig($this->packages[$name]);
         }
-        $this->loadedThemes[] = $dir;
-        $config = new Config([
-            'theme.prefix' => "@/~themes/$themeName/",
-        ]);
-        $config->readFile($yaml);
+    }
+
+    protected function loadPackageFromConfig(Config $config)
+    {
+        //pull requirements
+        foreach ($config['require'] ?? [] as $p) {
+            $this->loadPackage($p);
+        }
         //set up advanced files (these don't get prefixed by theme name)
         foreach ($config['advanced'] ?? [] as $k => $f) {
             $f['name'] = $k;
@@ -210,7 +237,7 @@ class ThemeProvider
                 if (substr($url, 0, 1) != '/') {
                     $url = $config['theme.prefix'] . $url;
                 }
-                $name = "theme: $themeName: $media: $file";
+                $name = "theme: " . $config['theme.prefix'] . ": $media: $file";
                 $this->addAsset(
                     'css',
                     $url, //url
@@ -228,7 +255,7 @@ class ThemeProvider
                 if (substr($url, 0, 1) != '/') {
                     $url = $config['theme.prefix'] . $url;
                 }
-                $name = "theme: $themeName: $media: $file";
+                $name = "theme: " . $config['theme.prefix'] . ": $media: $file";
                 $this->addAsset(
                     'js',
                     $url,
@@ -239,6 +266,34 @@ class ThemeProvider
                 );
             }
         }
+        //pull require-after requirements
+        foreach ($config['require-after'] ?? [] as $p) {
+            $this->loadPackage($p);
+        }
+    }
+
+    protected function doLoadTheme($dir, $yaml)
+    {
+        if (in_array($dir, $this->loadedThemes)) {
+            return;
+        }
+        $this->loadedThemes[] = $dir;
+        $config = new Config([
+            'theme.prefix' => "@/~themes/" . basename($dir) . "/",
+        ]);
+        $config->readFile($yaml);
+        // set up packages, then remove them from config
+        foreach ($config['packages'] ?? [] as $n => $p) {
+            $package = new Config($config->get());
+            unset($package['advanced']);
+            unset($package['css']);
+            unset($package['js']);
+            unset($package['require']);
+            $package->merge($p, null, true);
+            $this->packages[$n] = $package;
+        }
+        // load theme package
+        $this->loadPackageFromConfig($config);
     }
 
     public function addDirectory(string $dir)
@@ -260,10 +315,36 @@ class ThemeProvider
         return $this->variables;
     }
 
-    public function onResponseContentReady($response)
+    /**
+     * Load requested theme packages, page's _page CSS/JS files, and it plus all parents' _site files
+     *
+     * @param Response $response
+     * @return void
+     */
+    public function onResponseContentReady(Response $response)
     {
-        // load _site CSS and JS files files
+        // load requested packages
+        $packages = [];
+        // package requirements from page meta
+        if (($page = $response->source()) instanceof PageInterface) {
+            $packages = $page->meta('theme_packages') ?? [];
+        }
+        // scan for package requirements in content
+        $response->setText(preg_replace_callback(
+            '<!-- theme_package:([a-z0-9\-]+) -->',
+            function ($m) use (&$packages) {
+                $packages[] = $m[1];
+                return '';
+            },
+            $response->content()
+        ));
+        // load all packages
+        foreach (array_unique($packages) as $name) {
+            $this->loadPackage($name);
+        }
+        // set up URL context
         $context = $response->url()->siteFullPath();
+        URLFactory::beginContext($context);
         // load root _site files
         if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.css"))) {
             $this->addCss($asset->hash(), $asset, 'site');
@@ -284,14 +365,14 @@ class ThemeProvider
             }
         }
         // load _page CSS and JS files
-        $context = $response->url()->siteFullPath();
-        $context = preg_replace('@[^/]+$@', '', $context);
-        if ($asset = $this->leafcutter->assets()->get(new URL("_page.css"))) {
+        if ($asset = $this->leafcutter->assets()->get(new URL("./_page.css"))) {
             $this->addCss($asset->hash(), $asset, 'page');
         }
-        if ($asset = $this->leafcutter->assets()->get(new URL("_page.js"))) {
+        if ($asset = $this->leafcutter->assets()->get(new URL("./_page.js"))) {
             $this->addJs($asset->hash(), $asset, 'page');
         }
+        // end context
+        URLFactory::endContext();
     }
 
     public function onTemplateInjection_head()
@@ -474,7 +555,7 @@ class ThemeProvider
                     }
                 }
                 $content = implode(PHP_EOL, $content);
-                $filename = $e['media'] . '-' . hash('md5', $content) . '.' . $ext;
+                $filename = $e['media'] . '.' . $ext;
                 $bundled["bundle $k: $filename"] = [
                     'source' => $this->leafcutter->assets()->getFromString($content, new URL('@/~themes/' . $filename)),
                     'crossorigin' => null,

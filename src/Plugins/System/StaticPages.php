@@ -1,23 +1,22 @@
 <?php
-namespace Leafcutter\StaticPages;
+namespace Leafcutter\Plugins\System;
 
 use Leafcutter\Common\Filesystem;
 use Leafcutter\Leafcutter;
 use Leafcutter\Pages\PageInterface;
+use Leafcutter\Plugins\AbstractPlugin;
 use Leafcutter\Response;
 use Leafcutter\URL;
 
-class StaticPageProvider
+class StaticPages extends AbstractPlugin
 {
-    private $leafcutter;
+    const DEFAULT_CONFIG = [
+        "enabled" => true,
+        "directory" => '${base_dir}',
+        "ttl" => 300,
+    ];
 
-    public function __construct(Leafcutter $leafcutter)
-    {
-        $this->leafcutter = $leafcutter;
-        $leafcutter->events()->addSubscriber($this);
-    }
-
-    public function onResponseURL_namespace_staticAsyncCheck($url): ?Response
+    public function onResponseURL_namespace_staticPageBuild($url): ?Response
     {
         $rUrl = new URL('@/' . $url->sitePath());
         $currentHash = $this->leafcutter->content()->hash($rUrl->sitePath(), $rUrl->siteNamespace());
@@ -26,7 +25,7 @@ class StaticPageProvider
         $response->setTemplate(null);
         $response->header('cache-control', 'max-age=60, public');
         if ($this->needsRebuild($rUrl)) {
-            if (is_file($this->urlSavePath($rUrl)) && !$this->leafcutter->config('statics.enabled')) {
+            if (is_file($this->urlSavePath($rUrl)) && !$this->config('enabled')) {
                 $response->setText('');
                 unlink($this->urlSavePath($rUrl));
                 return $response;
@@ -45,7 +44,7 @@ class StaticPageProvider
     protected function needsRebuild($url)
     {
         $file = $this->urlSavePath($url);
-        if (is_file($file) && !$this->leafcutter->config('statics.enabled')) {
+        if (is_file($file) && !$this->config('enabled')) {
             return true;
         }
         if (!is_file($file)) {
@@ -59,7 +58,7 @@ class StaticPageProvider
         if (!$meta) {
             return true;
         }
-        $ttl = $this->leafcutter->config('statics.ttl');
+        $ttl = $this->config('ttl');
         if ($meta['time'] + $ttl < time()) {
             return true;
         }
@@ -71,13 +70,13 @@ class StaticPageProvider
 
     public function onResponseReturn($response)
     {
-        if (!$this->leafcutter->config('statics.enabled')) {
+        if (!$this->config('enabled')) {
             return;
         }
         if ($path = $this->savePath($response)) {
             $url = $response->source()->url();
             $content = $response->content();
-            $scriptURL = new URL('@/~staticAsyncCheck/' . $response->source()->url()->sitePath());
+            $scriptURL = new URL('@/~staticPageBuild/' . $response->source()->url()->sitePath());
             $meta = json_encode([
                 'hash' => $this->leafcutter->content()->hash($url->sitePath(), $url->siteNamespace()),
                 'time' => time(),
@@ -120,6 +119,6 @@ EOS;
         if ($path == '' || substr($path, -1) == '/') {
             $path .= 'index.html';
         }
-        return $this->leafcutter->config('statics.directory') . $path;
+        return $this->config('directory') .'/'. $path;
     }
 }

@@ -1,6 +1,9 @@
 <?php
 namespace Leafcutter;
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+
 require __DIR__ . '/../vendor/autoload.php';
 
 date_default_timezone_set("America/Denver");
@@ -21,8 +24,12 @@ URLFactory::normalizeCurrent();
 //initialize CMS context
 Leafcutter::beginContext($config);
 $leafcutter = Leafcutter::get();
+$leafcutter->logger()->pushHandler(
+    new StreamHandler(__DIR__ . '/debug.log', Logger::DEBUG)
+);
 $leafcutter->content()->addDirectory(__DIR__ . '/content');
-$leafcutter->theme()->loadTheme('leafcutter');
+$leafcutter->theme()->loadPackage('leafcutter-basic');
+$leafcutter->plugins()->load(Plugins\System\StaticPages::class);
 
 //build response from URL
 $response = $leafcutter->buildResponse(URLFactory::current());
