@@ -56,6 +56,11 @@ class ThemeProvider
         $this->loadTheme('leafcutter-libraries');
     }
 
+    public function getBodyClass() : string
+    {
+        return '';
+    }
+
     /**
      * Preprocesses CSS assets
      *

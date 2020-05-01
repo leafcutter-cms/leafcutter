@@ -9,7 +9,7 @@
 {% block head %}{% include "leafcutter/html_head.twig" %}{% endblock %}
 
     </head>
-    <body class="{{themes.getBodyClass}} {% block bodyclass %}{% endblock %}">
+    <body class="{{theme.getBodyClass}} {% block bodyclass %}{% endblock %}">
 {{ templates.html_injection('body_end')|raw }}
 
         <div id="main-wrapper">

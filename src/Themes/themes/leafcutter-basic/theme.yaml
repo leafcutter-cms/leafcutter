@@ -14,6 +14,7 @@
 
 require:
   - fontawesome
+
 css:
   library:
     - library.css

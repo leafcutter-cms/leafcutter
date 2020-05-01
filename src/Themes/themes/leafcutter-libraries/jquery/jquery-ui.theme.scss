@@ -450,6 +450,9 @@ a.ui-button:active,
 }
 
 /* Fixes for this environment */
-.ui-checkboxradio-radio-label.ui-state-active .ui-checkboxradio-icon {
+.ui-checkboxradio-label.ui-state-active .ui-checkboxradio-icon {
 	background-color: #444;
+	&.ui-icon-check {
+		background-color: #eee !important;
+	}
 }

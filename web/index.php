@@ -28,7 +28,7 @@ $leafcutter->logger()->pushHandler(
     new StreamHandler(__DIR__ . '/debug.log', Logger::DEBUG)
 );
 $leafcutter->content()->addDirectory(__DIR__ . '/content');
-$leafcutter->theme()->loadPackage('leafcutter-basic');
+$leafcutter->theme()->loadTheme('leafcutter-basic');
 $leafcutter->plugins()->load(Plugins\System\StaticPages::class);
 
 //build response from URL
