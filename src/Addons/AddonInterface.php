@@ -1,9 +1,7 @@
 <?php
-namespace Leafcutter\Plugins;
+namespace Leafcutter\Addons;
 
-use Leafcutter\Leafcutter;
-
-interface PluginInterface
+interface AddonInterface
 {
     public static function name(): string;
     public static function provides(): array;

@@ -21,7 +21,7 @@ class Leafcutter
         $this->templates = new Templates\TemplateProvider($this);
         $this->theme = new Themes\ThemeProvider($this);
         $this->dom = new DOM\DOMProvider($this);
-        $this->plugins = new Plugins\PluginProvider($this);
+        $this->addons = new Addons\AddonProvider($this);
     }
 
     public function logger(): Logger {
@@ -33,14 +33,14 @@ class Leafcutter
         return $this->theme;
     }
 
-    public function plugins(): Plugins\PluginProvider
+    public function addons(): Addons\AddonProvider
     {
-        return $this->plugins;
+        return $this->addons;
     }
 
-    public function plugin(string $name): ?Plugins\PluginInterface
+    public function addon(string $name): ?Addons\AddonInterface
     {
-        return $this->plugins()->get($name);
+        return $this->addons()->get($name);
     }
 
     public function find(string $path)

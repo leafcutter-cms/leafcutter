@@ -1,12 +1,12 @@
 <?php
-namespace Leafcutter\Plugins;
+namespace Leafcutter\Addons;
 
 use Leafcutter\Leafcutter;
 
-class PluginProvider
+class AddonProvider
 {
     private $leafcutter;
-    private $plugins = [];
+    private $addons = [];
     private $provides = [];
     private $classes = [];
     private $interfaces = [];
@@ -25,12 +25,12 @@ class PluginProvider
     public function register(string $class): string
     {
         // throw exception for invalid classes
-        if (!in_array(PluginInterface::class, class_implements($class))) {
-            throw new \Exception("Can't register $class because it isn't a plugin");
+        if (!in_array(AddonInterface::class, class_implements($class))) {
+            throw new \Exception("Can't register $class because it isn't a valid Addon");
         }
-        // return name without doing anything if plugin with this name is already loaded
+        // return name without doing anything if Addon with this name is already loaded
         $name = $class::name();
-        if (isset($this->plugins[$name])) {
+        if (isset($this->addons[$name])) {
             return $name;
         }
         // register class and provides list
@@ -39,17 +39,17 @@ class PluginProvider
         return $name;
     }
 
-    public function get(string $name): ?PluginInterface
+    public function get(string $name): ?AddonInterface
     {
-        return @$this->plugins[$name];
+        return @$this->addons[$name];
     }
 
     public function load(string $class): string
     {
         // get name
         $name = $class::name();
-        // see if plugin is already loaded
-        if (isset($this->plugins[$name])) {
+        // see if Addon is already loaded
+        if (isset($this->addons[$name])) {
             return $name;
         }
         // get class from registered list if found
@@ -59,7 +59,7 @@ class PluginProvider
         // verify mandatory interfaces
         foreach ($this->interfaces[$name]??[] as $interface) {
             if (!in_array($interface,class_implements($interface))) {
-                throw new \Exception("Plugins named \"$name\" must implement $interface");
+                throw new \Exception("Addons named \"$name\" must implement $interface");
             }
         }
         // try to load requirements
@@ -75,17 +75,17 @@ class PluginProvider
             if ($found) {
                 $this->load($found);
             } else {
-                throw new \Exception("Couldn't load plugin requirement. $class requires \"$req\"");
+                throw new \Exception("Couldn't load addon requirement. $class requires \"$req\"");
             }
         }
-        // add plugin to internal list
-        $this->plugins[$name] = new $class($this->leafcutter);
+        // add Addon to internal list
+        $this->addons[$name] = new $class($this->leafcutter);
         // merge in default config
-        $this->leafcutter->config()->merge($this->plugins[$name]->getDefaultConfig(), "plugins.$name");
-        // call plugin load method
-        $this->plugins[$name]->load();
+        $this->leafcutter->config()->merge($this->addons[$name]->getDefaultConfig(), "addons.config.$name");
+        // call Addon load method
+        $this->addons[$name]->load();
         // set up event subscribers
-        foreach ($this->plugins[$name]->getEventSubscribers() as $subscriber) {
+        foreach ($this->addons[$name]->getEventSubscribers() as $subscriber) {
             $this->leafcutter->events()->addSubscriber($subscriber);
         }
         // return name

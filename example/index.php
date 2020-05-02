@@ -29,7 +29,6 @@ $leafcutter->logger()->pushHandler(
 );
 $leafcutter->content()->addDirectory(__DIR__ . '/content');
 $leafcutter->theme()->loadTheme('leafcutter-basic');
-$leafcutter->plugins()->load(Plugins\System\StaticPages::class);
 
 //build response from URL
 $response = $leafcutter->buildResponse(URLFactory::current());
