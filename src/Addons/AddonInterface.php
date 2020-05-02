@@ -1,6 +1,8 @@
 <?php
 namespace Leafcutter\Addons;
 
+use Leafcutter\Leafcutter;
+
 interface AddonInterface
 {
     public static function name(): string;

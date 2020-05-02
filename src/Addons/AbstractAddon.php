@@ -1,6 +1,8 @@
 <?php
 namespace Leafcutter\Addons;
 
+use Leafcutter\Leafcutter;
+
 abstract class AbstractAddon implements AddonInterface
 {
     protected $leafcutter;
