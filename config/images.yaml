@@ -1,0 +1,11 @@
+images:
+  driver: gd # options are gd, imagick, or gmagick
+  presets:
+    default: []
+    maxresolution:
+      fit: 1920
+      format: png
+    full:
+      fit: 1920
+    thumbnail:
+      crop: 144

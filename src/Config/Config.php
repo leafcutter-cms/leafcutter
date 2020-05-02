@@ -11,7 +11,7 @@ class Config extends BaseConfig
     public function __construct(array $data = [])
     {
         parent::__construct($data);
-        $this->readFile(__DIR__ . '/default.yaml');
+        $this->readDir(__DIR__ . '/../../config');
     }
 
     public function hash(): string

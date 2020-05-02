@@ -1,0 +1,12 @@
+cache:
+  directory: null
+  ttl:
+    content: 60
+    pages: 600
+    assets: 3600
+  driver: ephemeral
+  driver_filesystem_config:
+    encoder: Native
+    path: ${cache.directory}Cache
+  driver_sqlite_config:
+    path: ${cache.directory}Cache

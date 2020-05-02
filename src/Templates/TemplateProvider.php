@@ -25,7 +25,7 @@ class TemplateProvider
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
-        $this->addDirectory(__DIR__ . '/templates');
+        $this->addDirectory(__DIR__ . '/../../templates');
         $this->leafcutter->events()->addSubscriber($this);
         $this->leafcutter->events()->dispatchAll('onTemplateProviderReady', $this);
     }

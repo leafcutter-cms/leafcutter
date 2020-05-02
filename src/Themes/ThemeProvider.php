@@ -51,7 +51,7 @@ class ThemeProvider
     {
         $this->leafcutter = $leafcutter;
         $this->variables = new ThemeVariables($leafcutter);
-        $this->addDirectory(__DIR__ . '/themes');
+        $this->addDirectory(__DIR__ . '/../../themes');
         $leafcutter->events()->addSubscriber($this);
         $this->loadTheme('leafcutter-libraries');
     }

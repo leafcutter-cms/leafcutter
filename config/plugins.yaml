@@ -1,0 +1,4 @@
+plugins:
+  system_staticpages:
+    enabled: true
+    ttl: 60

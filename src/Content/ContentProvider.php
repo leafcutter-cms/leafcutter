@@ -12,7 +12,7 @@ class ContentProvider implements ContentProviderInterface
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
-        $this->addProvider(new ContentDirectoryProvider(__DIR__ . '/content/'));
+        $this->addProvider(new ContentDirectoryProvider(__DIR__ . '/../../content/'));
     }
 
     /**
