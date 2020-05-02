@@ -1,6 +1,5 @@
 {
     "name": "byjoby/leafcutter",
-    "type": "composer-plugin",
     "license": "MIT",
     "authors": [
         {
@@ -29,7 +28,11 @@
             "Leafcutter\\": "src"
         }
     },
+    "type": "composer-plugin",
     "extra": {
         "class": "Leafcutter\\Composer\\Plugin"
+    },
+    "require-dev": {
+        "composer/composer": "^1.10"
     }
 }
