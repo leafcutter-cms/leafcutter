@@ -11,8 +11,8 @@
  * Modified from the default jQuery UI theme to integrate with Leafcutter theme
  */
 
- @import "@/~themes/leafcutter-libraries/mixins/colors.scss";
- @import "@/~themes/leafcutter-libraries/mixins/sizing.scss";
+@import "@/~themes/leafcutter-libraries/mixins/colors.scss";
+@import "@/~themes/leafcutter-libraries/mixins/sizing.scss";
 
 @function high-contrast-icon($color) {
     @if (lightness($color) > 50) {
@@ -438,18 +438,7 @@ a.ui-button:active,
 	border-bottom-right-radius: 3px;
 }
 
-/* Overlays */
-.ui-widget-overlay {
-	background: #aaaaaa;
-	opacity: .003;
-	filter: Alpha(Opacity=.3); /* support: IE8 */
-}
-.ui-widget-shadow {
-	-webkit-box-shadow: 0px 0px 5px #666666;
-	box-shadow: 0px 0px 5px #666666;
-}
-
-/* Fixes for this environment */
+/* Fixes for leafcutter environment */
 .ui-checkboxradio-label.ui-state-active .ui-checkboxradio-icon {
 	background-color: #444;
 	&.ui-icon-check {

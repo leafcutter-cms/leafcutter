@@ -1,26 +1,24 @@
 <!doctype html>
-<html>
-    <head>
+<html class="{{theme.getHTMLClass}} {% block htmlclass %}{% endblock %}">
+<head>
 
-<title>
-{% block title %}{% include "leafcutter/html_title.twig" %}{% endblock %}
-</title>
-
+{{ templates.html_injection('head_start')|raw }}
+<title>{% block title %}{% include "leafcutter/html_title.twig" %}{% endblock %}</title>
 {% block head %}{% include "leafcutter/html_head.twig" %}{% endblock %}
+{{ templates.html_injection('head')|raw }}
+{{ templates.html_injection('head_end')|raw }}
 
-    </head>
-    <body class="{{theme.getBodyClass}} {% block bodyclass %}{% endblock %}">
-{{ templates.html_injection('body_end')|raw }}
+</head>
+<body class="{{theme.getBodyClass}} {% block bodyclass %}{% endblock %}">
 
-        <div id="main-wrapper">
-
+{{ templates.html_injection('body_start')|raw }}
+<div id="main-wrapper">
 {% block header %}{% include "blocks/header.twig" %}{% endblock %}
 {% block navigation %}{% include "blocks/navigation.twig" %}{% endblock %}
 {% block main %}{% include "blocks/main.twig" %}{% endblock %}
 {% block footer %}{% include "blocks/footer.twig" %}{% endblock %}
-
-        </div>
-
+</div>
 {{ templates.html_injection('body_end')|raw }}
-    </body>
+
+</body>
 </html>

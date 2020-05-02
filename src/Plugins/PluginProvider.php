@@ -9,16 +9,23 @@ class PluginProvider
     private $plugins = [];
     private $provides = [];
     private $classes = [];
+    private $interfaces = [];
 
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
     }
 
+    public function requireInterface(string $name, string $interface)
+    {
+        $this->interfaces[$name][] = $interface;
+        $this->interfaces[$name] = array_unique($this->interfaces[$name]);
+    }
+
     public function register(string $class): string
     {
         // throw exception for invalid classes
-        if (!in_array(PluginInterface::class,class_implements($class))) {
+        if (!in_array(PluginInterface::class, class_implements($class))) {
             throw new \Exception("Can't register $class because it isn't a plugin");
         }
         // return name without doing anything if plugin with this name is already loaded
@@ -49,6 +56,12 @@ class PluginProvider
         $class = $this->classes[$class] ?? $class;
         // register class
         $this->register($class);
+        // verify mandatory interfaces
+        foreach ($this->interfaces[$name]??[] as $interface) {
+            if (!in_array($interface,class_implements($interface))) {
+                throw new \Exception("Plugins named \"$name\" must implement $interface");
+            }
+        }
         // try to load requirements
         foreach ($class::requires() as $req) {
             $found = null;
@@ -58,7 +71,7 @@ class PluginProvider
                     break;
                 }
             }
-            $found = $found?? @$this->classes[$req];
+            $found = $found ?? @$this->classes[$req];
             if ($found) {
                 $this->load($found);
             } else {

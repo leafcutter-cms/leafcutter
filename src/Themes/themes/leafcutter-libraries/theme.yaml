@@ -24,6 +24,11 @@ packages:
     js:
       library:
         jquery: jquery/jquery.js
+  # package for loading just vue
+  vue:
+    js:
+      library:
+        vue: vue/vue.min.js
   # package for loading just the CSS of fontawesome
   fontawesome:
     css:

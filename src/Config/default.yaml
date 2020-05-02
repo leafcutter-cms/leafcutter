@@ -126,3 +126,13 @@ theme:
     bg-dark-warning: ${theme.variables.bg-warning}
     bg-dark-info: ${theme.variables.bg-info}
     bg-dark-muted: '#555'
+    # overlay colors/opacity
+    bg-overlay: ${theme.variables.bg-dark-normal}
+    bg-overlay-opacity: 0.8
+    bg-overlay-opacity-muted: 0.5
+    bg-overlay-dark: ${theme.variables.bg-overlay}
+    # shadows and rounded corner
+    border-radius: 0.12em
+    border-radius-accent: 0.25em
+    box-shadow: 0.12em 0.12em 0.12em rgba(0,0,0,0.25)
+    box-shadow-inset: inset 0.12em 0.12em 0.12em rgba(0,0,0,0.25)

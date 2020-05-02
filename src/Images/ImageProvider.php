@@ -55,6 +55,11 @@ class ImageProvider
         $this->leafcutter->dom()->prepareLinkAttribute($event, 'src', false);
     }
 
+    public function onDOMElement_link(DOMEvent $event)
+    {
+        $this->leafcutter->dom()->prepareLinkAttribute($event, 'href', false);
+    }
+
     public function search($search, array $query = [], string $namespace = null): Gallery
     {
         $images = [];
@@ -149,7 +154,7 @@ class ImageProvider
         $asset = new ImageAsset($url, $source);
         //explicitly set filename
         $filename = $asset->filename();
-        $filename = preg_replace('@\.[a-z]+$@', '.' . $query['format'], $filename);
+        $filename = preg_replace('@\..+?$@', '.' . $query['format'], $filename);
         $asset->setFilename($filename);
         return $asset;
     }
