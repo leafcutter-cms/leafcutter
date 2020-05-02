@@ -16,10 +16,10 @@
 
 @function high-contrast-icon($color) {
     @if (lightness($color) > 50) {
-        @return url("images/ui-icons_444444_256x240.png");
+        @return url("images/ui-icons_333333_256x240.png");
     }
     @else {
-        @return url("images/ui-icons_ffffff_256x240.png");
+        @return url("images/ui-icons_cccccc_256x240.png");
     }
 }
 
