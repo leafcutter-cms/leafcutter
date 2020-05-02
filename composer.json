@@ -1,5 +1,6 @@
 {
     "name": "byjoby/leafcutter",
+    "type": "composer-plugin",
     "license": "MIT",
     "authors": [
         {
@@ -20,11 +21,15 @@
         "tedivm/stash": "0.14.*",
         "symfony/yaml": "~4",
         "matthiasmullie/minify": "~1",
-        "monolog/monolog": "^2.0"
+        "monolog/monolog": "^2.0",
+        "composer-plugin-api": "^1.1"
     },
     "autoload": {
         "psr-4": {
             "Leafcutter\\": "src"
         }
+    },
+    "extra": {
+        "class": "Leafcutter\\Composer\\Plugin"
     }
 }
