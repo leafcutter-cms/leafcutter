@@ -14,6 +14,12 @@ $config['base_dir'] = __DIR__;
 $config->readDir(__DIR__ . '/config/');
 $config['statics.directory'] = '${base_dir}/';
 
+//initialize logger
+$logger = new Logger('leafcutter');
+$logger->pushHandler(
+    new StreamHandler(__DIR__ . '/debug.log', Logger::DEBUG)
+);
+
 //initialize URL site and context
 URLFactory::beginSite($config['site.url']);
 URLFactory::beginContext(); //calling without argument sets context to site
@@ -22,11 +28,8 @@ URLFactory::beginContext(); //calling without argument sets context to site
 URLFactory::normalizeCurrent();
 
 //initialize CMS context
-Leafcutter::beginContext($config);
+Leafcutter::beginContext($config, $logger);
 $leafcutter = Leafcutter::get();
-$leafcutter->logger()->pushHandler(
-    new StreamHandler(__DIR__ . '/debug.log', Logger::DEBUG)
-);
 $leafcutter->content()->addDirectory(__DIR__ . '/content');
 $leafcutter->theme()->loadTheme('leafcutter-basic');
 

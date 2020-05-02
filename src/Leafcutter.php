@@ -8,9 +8,9 @@ class Leafcutter
     private static $instances = [];
     private $config, $events, $cache, $content, $pages, $assets, $images, $templates, $theme, $dom, $statics;
 
-    private function __construct(Config\Config $config = null)
+    private function __construct(Config\Config $config = null, Logger $logger = null)
     {
-        $this->logger = new Logger('leafcutter');
+        $this->logger = $logger ?? new Logger('leafcutter');
         $this->config = $config ?? new Config\Config();
         $this->events = new Events\EventProvider($this);
         $this->cache = new Cache\CacheProvider($this);
@@ -24,7 +24,8 @@ class Leafcutter
         $this->addons = new Addons\AddonProvider($this);
     }
 
-    public function logger(): Logger {
+    public function logger(): Logger
+    {
         return $this->logger;
     }
 
@@ -150,17 +151,18 @@ class Leafcutter
      * Begin a new context either by optionally providing a Config object
      * or existing Leafcutter object.
      *
-     * @param [type] $specified
+     * @param Leafcutter|Config $specified
+     * @param Logger $logger
      * @return Leafcutter
      */
-    public static function beginContext($specified = null): Leafcutter
+    public static function beginContext($specified = null, Logger $logger = null): Leafcutter
     {
         if ($specified instanceof Leafcutter) {
             self::$instances[] = $specified;
         } elseif ($specified instanceof Config\Config) {
-            self::$instances[] = new Leafcutter($specified);
+            self::$instances[] = new Leafcutter($specified, $logger);
         } else {
-            self::$instances[] = new Leafcutter();
+            self::$instances[] = new Leafcutter(null, $logger);
         }
         return self::get();
     }

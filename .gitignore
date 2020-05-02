@@ -8,3 +8,5 @@
 /demo/**/*.html
 /demo/content/*
 !/demo/content/index.md
+
+/src/Composer/addons.txt

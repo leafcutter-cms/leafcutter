@@ -1,6 +1,7 @@
 <?php
 namespace Leafcutter\Addons;
 
+use Leafcutter\Composer\ComposerAddons;
 use Leafcutter\Leafcutter;
 
 class AddonProvider
@@ -14,6 +15,11 @@ class AddonProvider
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
+        // register any addons from the Composer
+        foreach (ComposerAddons::addons() as $class) {
+            $this->leafcutter->logger()->debug("AddonProvider: Addon from Composer: $class");
+            $this->register($class);
+        }
     }
 
     public function requireInterface(string $name, string $interface)
@@ -26,7 +32,7 @@ class AddonProvider
     {
         // throw exception for invalid classes
         if (!in_array(AddonInterface::class, class_implements($class))) {
-            throw new \Exception("Can't register $class because it isn't a valid Addon");
+            throw new \Exception("Can't register $class because it isn't a valid Leafcutter Addon");
         }
         // return name without doing anything if Addon with this name is already loaded
         $name = $class::name();
@@ -57,8 +63,8 @@ class AddonProvider
         // register class
         $this->register($class);
         // verify mandatory interfaces
-        foreach ($this->interfaces[$name]??[] as $interface) {
-            if (!in_array($interface,class_implements($interface))) {
+        foreach ($this->interfaces[$name] ?? [] as $interface) {
+            if (!in_array($interface, class_implements($interface))) {
                 throw new \Exception("Addons named \"$name\" must implement $interface");
             }
         }
