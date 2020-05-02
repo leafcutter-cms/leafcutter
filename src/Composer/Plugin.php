@@ -17,7 +17,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         $this->io = $io;
     }
 
-    public static function onPostAutoloadDump($event)
+    public static function postAutoloadDump($event)
     {
         var_dump('autoload event?');
     }
