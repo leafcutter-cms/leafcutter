@@ -3,7 +3,8 @@
 *.ignore
 *.log
 
-/web/assets
-/web/cache
-/web/**/*.html
-/web/content
+/demo/assets
+/demo/cache
+/demo/**/*.html
+/demo/content/*
+!/demo/content/index.md

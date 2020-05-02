@@ -1,3 +1,0 @@
-window.onload=()=>{var lsc=(a,as)=>{if(a.length==0){return}
-var x=new XMLHttpRequest();x.open('GET',a.shift());x.onload=()=>{if(x.status===200){var el=document.createElement('script');el.innerHTML=x.responseText;document.head.appendChild(el)}else{console.error(x.status)}
-if(!as){lsc(a,as)}};x.send();if(as){lsc(a,as)}};var o=["http:\/\/localhost\/leafcutter\/web\/assets\/b\/5f\/0e\/067bb070b9caa50848cbb8aec20\/page-b5f0e067bb070b9caa50848cbb8aec20.js"];var a=[];lsc(o,!1);lsc(a,!0)}
