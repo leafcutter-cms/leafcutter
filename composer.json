@@ -33,6 +33,6 @@
         "class": "Leafcutter\\Addons\\Composer\\Plugin"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.1"
+        "phpunit/phpunit": "^9"
     }
 }
