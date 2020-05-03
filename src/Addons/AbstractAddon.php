@@ -12,15 +12,11 @@ abstract class AbstractAddon implements AddonInterface
 
     abstract public function getEventSubscribers(): array;
 
-    public static function provides(): array
-    {
-        return [];
-    }
+    abstract public static function name(): string;
 
-    public static function requires(): array
-    {
-        return [];
-    }
+    abstract public static function provides(): array;
+
+    abstract public static function requires(): array;
 
     public function __construct(Leafcutter $leafcutter)
     {
@@ -35,12 +31,5 @@ abstract class AbstractAddon implements AddonInterface
     public function config(string $key)
     {
         return $this->leafcutter->config("addons.config." . $this->name() . ".$key");
-    }
-
-    public static function name(): string
-    {
-        $class = get_called_class();
-        $name = strtolower(implode('_', array_slice(explode('\\', $class), -2)));
-        return $name;
     }
 }

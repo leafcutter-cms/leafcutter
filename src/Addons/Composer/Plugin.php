@@ -24,7 +24,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-namespace Leafcutter\Composer;
+namespace Leafcutter\Addons\Composer;
 
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;

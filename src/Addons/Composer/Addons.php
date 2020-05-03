@@ -1,7 +1,7 @@
 <?php
-namespace Leafcutter\Composer;
+namespace Leafcutter\Addons\Composer;
 
-class ComposerAddons
+class Addons
 {
     public static function addons(): array
     {

@@ -30,9 +30,6 @@
     },
     "type": "composer-plugin",
     "extra": {
-        "class": "Leafcutter\\Composer\\Plugin"
-    },
-    "require-dev": {
-        "composer/composer": "^1.10"
+        "class": "Leafcutter\\Addons\\Composer\\Plugin"
     }
 }

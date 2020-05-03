@@ -1,7 +1,6 @@
 <?php
 namespace Leafcutter\Addons;
 
-use Leafcutter\Composer\ComposerAddons;
 use Leafcutter\Leafcutter;
 
 class AddonProvider
@@ -16,7 +15,7 @@ class AddonProvider
     {
         $this->leafcutter = $leafcutter;
         // register any addons from the Composer
-        foreach (ComposerAddons::addons() as $class) {
+        foreach (Composer\Addons::addons() as $class) {
             $this->leafcutter->logger()->debug("AddonProvider: Addon from Composer: $class");
             $this->register($class);
         }
@@ -54,6 +53,8 @@ class AddonProvider
     {
         // get name
         $name = $class::name();
+        $names = $class::provides();
+        $names[] = $name;
         // see if Addon is already loaded
         if (isset($this->addons[$name])) {
             return $name;
@@ -63,9 +64,11 @@ class AddonProvider
         // register class
         $this->register($class);
         // verify mandatory interfaces
-        foreach ($this->interfaces[$name] ?? [] as $interface) {
-            if (!in_array($interface, class_implements($interface))) {
-                throw new \Exception("Addons named \"$name\" must implement $interface");
+        foreach ($names as $n) {
+            foreach ($this->interfaces[$n] ?? [] as $interface) {
+                if (!in_array($interface, class_implements($class))) {
+                    throw new \Exception("Addons named or providing \"$n\" must implement $interface");
+                }
             }
         }
         // try to load requirements
@@ -84,8 +87,10 @@ class AddonProvider
                 throw new \Exception("Couldn't load addon requirement. $class requires \"$req\"");
             }
         }
-        // add Addon to internal list
-        $this->addons[$name] = new $class($this->leafcutter);
+        // add Addon to internal list by its own name and all names it provides
+        foreach ($names as $n) {
+            $this->addons[$n] = new $class($this->leafcutter);
+        }
         // merge in default config
         $this->leafcutter->config()->merge($this->addons[$name]->getDefaultConfig(), "addons.config.$name");
         // call Addon load method
