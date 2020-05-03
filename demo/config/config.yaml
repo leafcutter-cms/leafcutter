@@ -22,7 +22,7 @@ plugins:
 theme:
   css:
     bundle: false
-    max_inlined: 0
+    max_inlined: 102400
     minify: false
   js:
     bundle: false

@@ -12,7 +12,6 @@ date_default_timezone_set("America/Denver");
 $config = new Config\Config();
 $config['base_dir'] = __DIR__;
 $config->readDir(__DIR__ . '/config/');
-$config['statics.directory'] = '${base_dir}/';
 
 //initialize logger
 $logger = new Logger('leafcutter');
@@ -24,7 +23,7 @@ $logger->pushHandler(
 URLFactory::beginSite($config['site.url']);
 URLFactory::beginContext(); //calling without argument sets context to site
 
-//normalize URL
+//normalize current URL
 URLFactory::normalizeCurrent();
 
 //initialize CMS context

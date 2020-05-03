@@ -80,10 +80,10 @@ class ContentDirectoryProvider implements ContentProviderInterface
     public function __construct(string $directory)
     {
         if (!is_dir($directory)) {
-            throw new Exception("Can't use content directory $directory because it isn't a directory.");
+            \throw new Exception("Can't use content directory $directory because it isn't a directory.");
         }
         if (!is_readable($directory)) {
-            throw new Exception("Can't use content directory $directory because it isn't readable.");
+            \throw new Exception("Can't use content directory $directory because it isn't readable.");
         }
         $this->directory = realpath($directory);
     }

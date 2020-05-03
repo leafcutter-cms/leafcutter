@@ -1,3 +1,6 @@
+# index.php isn't used as an index, because it must be rewritten to
+DirectoryIndex index.html
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
