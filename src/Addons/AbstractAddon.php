@@ -8,7 +8,7 @@ abstract class AbstractAddon implements AddonInterface
     protected $leafcutter;
     const DEFAULT_CONFIG = [];
 
-    abstract public function load(): void;
+    abstract public function activate(): void;
 
     abstract public function getEventSubscribers(): array;
 

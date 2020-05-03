@@ -13,5 +13,5 @@ interface AddonInterface
     public function getEventSubscribers(): array;
     public function getDefaultConfig(): array;
     public function config(string $key);
-    public function load(): void;
+    public function activate(): void;
 }

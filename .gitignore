@@ -9,4 +9,4 @@
 /demo/content/*
 !/demo/content/index.md
 
-/src/Composer/addons.txt
+/src/Addons/Composer/addons.txt

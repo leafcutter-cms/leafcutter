@@ -8,16 +8,25 @@ class AddonProvider
     private $leafcutter;
     private $addons = [];
     private $provides = [];
-    private $classes = [];
     private $interfaces = [];
 
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
-        // register any addons from the Composer
+        // register any addons from Composer
         foreach (Composer\Addons::addons() as $class) {
-            $this->leafcutter->logger()->debug("AddonProvider: Addon from Composer: $class");
+            $this->leafcutter->logger()->debug("AddonProvider: Addon registered from Composer: $class");
             $this->register($class);
+        }
+        // register any addons from config
+        foreach ($this->leafcutter->config('addons.register') ?? [] as $class) {
+            $this->leafcutter->logger()->debug("AddonProvider: Addon registered from config: $class");
+            $this->register($class);
+        }
+        // load addons from config
+        foreach ($this->leafcutter->config('addons.activate') ?? [] as $name) {
+            $this->leafcutter->logger()->debug("AddonProvider: Addon loaded from config: $name");
+            $this->activate($name);
         }
     }
 
@@ -29,8 +38,10 @@ class AddonProvider
 
     public function register(string $class): string
     {
+        $this->leafcutter->logger()->debug('AddonProvider: register: ' . $class);
         // throw exception for invalid classes
         if (!in_array(AddonInterface::class, class_implements($class))) {
+            $this->leafcutter->logger()->error('AddonProvider: tried to register invalid class: ' . $class);
             throw new \Exception("Can't register $class because it isn't a valid Leafcutter Addon");
         }
         // return name without doing anything if Addon with this name is already loaded
@@ -39,8 +50,10 @@ class AddonProvider
             return $name;
         }
         // register class and provides list
-        $this->classes[$name] = $class;
-        $this->provides[$name] = $class::provides();
+        $this->provides[$name] = $class;
+        foreach ($class::provides() as $n) {
+            $this->provides[$n] = $class;
+        }
         return $name;
     }
 
@@ -49,18 +62,15 @@ class AddonProvider
         return @$this->addons[$name];
     }
 
-    public function load(string $class): string
+    public function activate(string $name)
     {
+        $this->leafcutter->logger()->debug('AddonProvider: activate: ' . $name);
+        // try to locate class from provides list
+        $class = @$this->provides[$name] ?? $name;
         // get name
         $name = $class::name();
         $names = $class::provides();
         $names[] = $name;
-        // see if Addon is already loaded
-        if (isset($this->addons[$name])) {
-            return $name;
-        }
-        // get class from registered list if found
-        $class = $this->classes[$class] ?? $class;
         // register class
         $this->register($class);
         // verify mandatory interfaces
@@ -71,7 +81,7 @@ class AddonProvider
                 }
             }
         }
-        // try to load requirements
+        // try to activate requirements
         foreach ($class::requires() as $req) {
             $found = null;
             foreach (array_reverse($this->provides) as $depName => $provides) {
@@ -80,11 +90,10 @@ class AddonProvider
                     break;
                 }
             }
-            $found = $found ?? @$this->classes[$req];
             if ($found) {
-                $this->load($found);
+                $this->activate($found);
             } else {
-                throw new \Exception("Couldn't load addon requirement. $class requires \"$req\"");
+                throw new \Exception("Couldn't activate addon requirement. $class requires \"$req\"");
             }
         }
         // add Addon to internal list by its own name and all names it provides
@@ -93,13 +102,11 @@ class AddonProvider
         }
         // merge in default config
         $this->leafcutter->config()->merge($this->addons[$name]->getDefaultConfig(), "addons.config.$name");
-        // call Addon load method
-        $this->addons[$name]->load();
+        // call Addon activate method
+        $this->addons[$name]->activate();
         // set up event subscribers
         foreach ($this->addons[$name]->getEventSubscribers() as $subscriber) {
             $this->leafcutter->events()->addSubscriber($subscriber);
         }
-        // return name
-        return $name;
     }
 }
