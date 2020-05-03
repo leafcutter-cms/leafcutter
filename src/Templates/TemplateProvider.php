@@ -33,7 +33,6 @@ class TemplateProvider
     public function html_injection(string $name): string
     {
         ob_start();
-        echo "<!-- onTemplateInjection_$name -->" . PHP_EOL;
         $this->leafcutter->events()->dispatchAll('onTemplateInjection_' . $name, null);
         $out = ob_get_contents();
         ob_end_clean();

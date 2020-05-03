@@ -73,6 +73,7 @@ application/msword|doc|dot
 application/mxf|mxf
 application/n-quads|nq
 application/n-triples|nt
+application/node|cjs
 application/octet-stream|bin|dms|lrf|mar|so|dist|distz|pkg|bpk|dump|elc|deploy|exe|dll|deb|dmg|iso|img|msi|msp|msm|buffer
 application/oda|oda
 application/oebps-package+xml|opf
@@ -812,6 +813,8 @@ model/gltf+json|gltf
 model/gltf-binary|glb
 model/iges|igs|iges
 model/mesh|msh|mesh|silo
+model/mtl|mtl
+model/obj|obj
 model/stl|stl
 model/vnd.collada+xml|dae
 model/vnd.dwf|dwf
