@@ -27,6 +27,13 @@ class Page implements PageInterface
         $this->setContent($content);
     }
 
+    public function __sleep()
+    {
+        // ensure that callback has been resolved before serializing
+        $this->content();
+        return array_keys(get_object_vars($this));
+    }
+
     public function dynamic(): bool
     {
         return $this->dynamic;

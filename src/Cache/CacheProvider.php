@@ -62,15 +62,18 @@ class CacheProvider implements CacheInterface
         $this->pool->save($item);
     }
 
-    // public function onPageURL(\Leafcutter\URL $url)
-    // {
-    //     return $this->pages->get($this->hashUrl($url));
-    // }
+    public function onPageURL(\Leafcutter\URL $url)
+    {
+        return $this->pages->get($this->hashUrl($url));
+    }
 
-    // public function onPageReturn($event)
-    // {
-    //     $this->pages->set($this->hashUrl($event->url()), $event->page());
-    // }
+    public function onPageReturn($event)
+    {
+        $page = $event->page();
+        if (!$page->dynamic()) {
+            $this->pages->set($this->hashUrl($event->url()), $page);
+        }
+    }
 
     public function onAssetURL(\Leafcutter\URL $url)
     {

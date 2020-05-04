@@ -1,12 +1,12 @@
 cache:
-  directory: null
+  directory: ${base_dir}/cache/
   ttl:
     content: 60
     pages: 600
     assets: 3600
-  driver: ephemeral
+  driver: filesystem
   driver_filesystem_config:
     encoder: Native
-    path: ${cache.directory}Cache
+    path: ${cache.directory}CacheProvider
   driver_sqlite_config:
-    path: ${cache.directory}Cache
+    path: ${cache.directory}CacheProvider
