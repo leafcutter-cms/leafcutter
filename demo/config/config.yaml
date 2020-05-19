@@ -6,7 +6,6 @@ templates:
     name: Demo Leafcutter site
 
 cache:
-  driver: ephemeral
   directory: '${base_dir}/cache/'
 
 assets:
