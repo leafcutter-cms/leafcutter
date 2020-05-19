@@ -58,10 +58,11 @@ class Leafcutter
     {
         // check for responses from events
         $response =
-        $url->siteNamespace() ? $this->events()->dispatchFirst('onResponseURL_namespace_' . $url->siteNamespace(), $url) : null ??
-        $this->events()->dispatchFirst('onResponseURL', $url);
+        $this->events()->dispatchFirst('onResponseURL', $url) ??
+        ($url->siteNamespace() ? $this->events()->dispatchFirst('onResponseURL_namespace_' . $url->siteNamespace(), $url) : null);
         if ($response) {
             $response->setURL($url);
+            return $response;
         }
         // try to build response from page
         $page = null;
@@ -70,7 +71,11 @@ class Leafcutter
             $response->setURL($url);
             $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url);
             if ($page && $normalizationRedirect) {
-                URLFactory::normalizeCurrent($page->url());
+                if (URLFactory::normalizeCurrent($page->url())) {
+                    // URLFactory is requesting a URL normalization redirect, so we're done
+                    $response->redirect($page->url(), 308);
+                    return $response;
+                }
             }
             if (!$page) {
                 $page = $this->pages()->error($url, 404);

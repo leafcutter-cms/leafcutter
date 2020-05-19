@@ -2,7 +2,7 @@ cache:
   directory: null
   ttl:
     content: 60
-    pages: 600
+    output: 60
     assets: 3600
   driver: ephemeral
   driver_filesystem_config:

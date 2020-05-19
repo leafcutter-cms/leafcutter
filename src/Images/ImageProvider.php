@@ -30,7 +30,7 @@ class ImageProvider
 
     /**
      * An event listener to specifically intercept requests for favicon.ico,
-     * and build a response that serves it out at the normal URL.
+     * and build a response that redirects to a public asset URL.
      *
      * @param URL $url
      * @return Response|null

@@ -2,6 +2,8 @@
 namespace Leafcutter\Cache;
 
 use Leafcutter\Leafcutter;
+use Leafcutter\Pages\Page;
+use Leafcutter\Response;
 
 class CacheProvider implements CacheInterface
 {
@@ -32,7 +34,7 @@ class CacheProvider implements CacheInterface
         }
         $this->pool = new \Stash\Pool($this->driver);
         // set up internal namespaces
-        $this->pages = $this->namespace('cacheprovider_pagecache', $leafcutter->config('cache.ttl.pages'));
+        $this->output = $this->namespace('cacheprovider_outputcache', $leafcutter->config('cache.ttl.output'));
         $this->assets = $this->namespace('cacheprovider_assetcache', $leafcutter->config('cache.ttl.assets'));
     }
 
@@ -62,15 +64,18 @@ class CacheProvider implements CacheInterface
         $this->pool->save($item);
     }
 
-    // public function onPageURL(\Leafcutter\URL $url)
-    // {
-    //     return $this->pages->get($this->hashUrl($url));
-    // }
+    public function onResponseURL(\Leafcutter\URL $url)
+    {
+        return $this->output->get($this->hashUrl($url));
+    }
 
-    // public function onPageReturn($event)
-    // {
-    //     $this->pages->set($this->hashUrl($event->url()), $event->page());
-    // }
+    public function onResponseReturn(Response $response)
+    {
+        if ($response->source() instanceof Page && $response->source()->dynamic()) {
+            return;
+        }
+        $this->output->set($this->hashUrl($response->url()), $response);
+    }
 
     public function onAssetURL(\Leafcutter\URL $url)
     {

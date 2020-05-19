@@ -7,8 +7,8 @@ class URLFactory
     private static $site = [];
 
     /**
-     * Automatically normalize the current URL and redirect to the normalized
-     * version if it doesn't match the actual current URL.
+     * Compare a given URL to the actual current URL, and return true if a
+     * normalization redirect should be done.
      *
      * Doesn't compare scheme by default, because that's not super reliable,
      * especially if there are proxies involved.
@@ -18,9 +18,9 @@ class URLFactory
      *
      * @param URL $current
      * @param boolean $useScheme
-     * @return void
+     * @return boolean whether a redirect should be done
      */
-    public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true)
+    public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true): bool
     {
         // get computed current URL, including fixing trailing slashes if necessary
         $current = ($current ?? static::current());
@@ -35,10 +35,8 @@ class URLFactory
             $currentCmp = preg_replace('/^https?:/', ':', $current);
             $actualCmp = preg_replace('/^https?:/', ':', $actual);
         }
-        // do comparison and redirect
-        if ($currentCmp !== $actualCmp) {
-            header("Location: $current");
-        }
+        // do comparison
+        return $currentCmp !== $actualCmp;
     }
 
     /**
