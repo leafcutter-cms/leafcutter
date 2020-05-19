@@ -129,6 +129,7 @@ class TemplateProvider
             'pages' => $this->leafcutter->pages(),
             'assets' => $this->leafcutter->assets(),
             'images' => $this->leafcutter->images(),
+            'leafcutter' => $this->leafcutter,
             'templates' => $this,
         ];
     }

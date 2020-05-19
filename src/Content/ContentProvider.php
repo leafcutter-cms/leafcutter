@@ -69,6 +69,9 @@ class ContentProvider implements ContentProviderInterface
             $result = array_merge(array_values($provider->files($path)), $result);
         }
         $result = $this->normalizeResultsArray($result, $namespace);
+        if ($namespace) {
+            $result = array_merge(array_values($this->files("~$namespace/$path")),$result);
+        }
         return $result;
     }
 
@@ -79,6 +82,9 @@ class ContentProvider implements ContentProviderInterface
             $result = array_merge(array_values($provider->directories($path)), $result);
         }
         $result = $this->normalizeResultsArray($result, $namespace);
+        if ($namespace) {
+            $result = array_merge(array_values($this->directories("~$namespace/$path")),$result);
+        }
         return $result;
     }
 
