@@ -24,12 +24,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-namespace Leafcutter\Addons\Composer;
+namespace Leafcutter\Composer;
 
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 class Plugin implements PluginInterface, EventSubscriberInterface
 {
@@ -52,13 +53,26 @@ class Plugin implements PluginInterface, EventSubscriberInterface
 
     public function postAutoloadDump()
     {
+        $fs = new Filesystem();
+        // empty out adjacent themes directory
+        $fs->remove(glob(__DIR__ . '/themes/*', GLOB_ONLYDIR));
+        // check for things that need updating
+        echo "Checking for Leafcutter addons/themes";
         $packageData = self::getPackageData();
         $packageData[] = self::getThisPackageData();
         $addons = [];
         foreach ($packageData as $p) {
+            // list addons in text file for later registration
             if ($p['type'] == 'leafcutter-addon') {
                 echo "leafcutter-addon: {$p['name']}" . PHP_EOL;
                 $addons[] = $p['extra']['leafcutter-addon'];
+            }
+            // copy themes into the adjacent themes directory
+            if ($p['type'] == 'leafcutter-theme') {
+                echo "leafcutter-theme: {$p['name']}" . PHP_EOL;
+                $src = self::getPackageDirectory($p['name']);
+                $dest = __DIR__ . '/themes/' . basename($p['name']);
+                $fs->mirror($src, $dest);
             }
         }
         file_put_contents(__DIR__ . '/addons.txt', implode(PHP_EOL, $addons));
@@ -92,6 +106,23 @@ class Plugin implements PluginInterface, EventSubscriberInterface
             . 'your own, and we can\'t really help you.',
             json_encode($checkedPaths)
         ));
+    }
+
+    private static function getPackageDirectory(string $name): ?string
+    {
+        $checkedPaths = [
+            // The top-level project's vendor dir
+            getcwd() . '/vendor/',
+            __DIR__ . '/../../../../../vendor/',
+            // This package's vendor dir
+            __DIR__ . '/../../vendor/',
+        ];
+        foreach ($checkedPaths as $dir) {
+            if (is_dir($dir . $name)) {
+                return $dir . $name;
+            }
+        }
+        return null;
     }
 
     private static function getPackageData(): array

@@ -22,6 +22,7 @@ class Leafcutter
         $this->theme = new Themes\ThemeProvider($this);
         $this->dom = new DOM\DOMProvider($this);
         $this->addons = new Addons\AddonProvider($this);
+        $this->events()->dispatchAll('onLeafcutterConstructed', $this);
     }
 
     public function logger(): Logger
@@ -59,7 +60,7 @@ class Leafcutter
         // check for responses from events
         $response =
         $this->events()->dispatchFirst('onResponseURL', $url) ??
-        ($url->siteNamespace() ? $this->events()->dispatchFirst('onResponseURL_namespace_' . $url->siteNamespace(), $url) : null);
+            ($url->siteNamespace() ? $this->events()->dispatchFirst('onResponseURL_namespace_' . $url->siteNamespace(), $url) : null);
         if ($response) {
             $response->setURL($url);
             return $response;

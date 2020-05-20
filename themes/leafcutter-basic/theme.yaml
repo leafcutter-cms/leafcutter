@@ -12,15 +12,10 @@
 #     media: library
 #     url: '@/~themes/leafcutter/zepto/fx.js'
 
-packages:
-  leafcutter-basic:
-    require:
-      - fontawesome
-    css:
-      library:
-        - library.css
-      blocking:
-        - blocking.css
-
 require:
-  - leafcutter-basic
+  - fontawesome
+css:
+  library:
+    - library.css
+  blocking:
+    - blocking.css

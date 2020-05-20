@@ -1,5 +1,5 @@
 <?php
-namespace Leafcutter\Addons\Composer;
+namespace Leafcutter\Composer;
 
 class Addons
 {

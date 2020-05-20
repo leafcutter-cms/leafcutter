@@ -9,4 +9,6 @@
 /demo/content/*
 !/demo/content/index.md
 
-/src/Addons/Composer/addons.txt
+/src/Composer/*.txt
+/src/Composer/themes/*
+!/src/Composer/themes/README.md

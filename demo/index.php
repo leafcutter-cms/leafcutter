@@ -30,7 +30,6 @@ URLFactory::normalizeCurrent();
 Leafcutter::beginContext($config, $logger);
 $leafcutter = Leafcutter::get();
 $leafcutter->content()->addDirectory(__DIR__ . '/content');
-$leafcutter->theme()->loadTheme('leafcutter-basic');
 
 //build response from URL
 $response = $leafcutter->buildResponse(URLFactory::current());

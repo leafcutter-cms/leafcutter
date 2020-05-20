@@ -13,6 +13,11 @@ class AddonProvider
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
+        $this->leafcutter->events()->addSubscriber($this);
+    }
+
+    public function onLeafcutterConstructed()
+    {
         // register any addons from Composer
         foreach (Composer\Addons::addons() as $class) {
             $this->leafcutter->logger()->debug("AddonProvider: Addon registered from Composer: $class");

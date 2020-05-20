@@ -2,20 +2,15 @@
 namespace Leafcutter\Themes;
 
 use Flatrr\Config\Config;
-use Leafcutter\Assets\AssetEvent;
-use Leafcutter\Assets\AssetFileEvent;
 use Leafcutter\Assets\AssetInterface;
-use Leafcutter\Assets\StringAsset;
+use Leafcutter\Composer\Themes;
 use Leafcutter\Leafcutter;
-use Leafcutter\Pages\PageInterface;
-use Leafcutter\Response;
 use Leafcutter\URL;
-use Leafcutter\URLFactory;
-use MatthiasMullie\Minify;
 
 class ThemeProvider
 {
     protected $leafcutter;
+    protected $events;
     protected $directories = [];
     protected $assets = [];
     protected $packages = [];
@@ -50,178 +45,49 @@ class ThemeProvider
     public function __construct(Leafcutter $leafcutter)
     {
         $this->leafcutter = $leafcutter;
+        $this->events = new ThemeEvents($leafcutter);
         $this->variables = new ThemeVariables($leafcutter);
         $this->addDirectory(__DIR__ . '/../../themes');
-        $leafcutter->events()->addSubscriber($this);
-        $this->loadTheme('leafcutter-libraries');
+        if (Themes::dir()) {
+            $this->addDirectory(Themes::dir());
+        }
     }
 
-    public function getBodyClass() : string
+    public function getBodyClass(): string
     {
         return '';
     }
 
-    /**
-     * Preprocesses CSS assets
-     *
-     * @param AssetEvent $event
-     * @return void
-     */
-    public function onAssetReady_css(AssetEvent $event)
+    public function registerTheme(string $name)
     {
-        $css = $event->asset()->content();
-        // resolve @import URLs
-        $css = \preg_replace_callback(
-            "/@import (url)?([\"']?)([^\"']+)([\"']?)( ([^;]+))?;/",
-            function ($matches) {
-                // quotes must match or it's malformed
-                if ($matches[2] != $matches[4]) {
-                    return $matches[0];
-                }
-                //skip data urls
-                if (substr($matches[3], 0, 5) == 'data:') {
-                    return $matches[0];
-                }
-                //get the parts neeeded
-                $url = new URL($matches[3]);
-                $mediaQuery = @$matches[6];
-                //get url from matches
-                if ($asset = $this->leafcutter->assets()->get($url)) {
-                    return '@import url(' . $asset->publicUrl() . ') ' . $mediaQuery . ';';
-                } else {
-                    return $matches[0];
-                }
-            },
-            $css
-        );
-        // resolve url() URLs
-        $css = \preg_replace_callback(
-            "/url\(([\"']?)([^\"'\)]+)([\"']?)\)/",
-            function ($matches) {
-                // quotes must match or it's malformed
-                if ($matches[1] != $matches[3]) {
-                    return $matches[0];
-                }
-                //skip data urls
-                if (substr($matches[2], 0, 5) == 'data:') {
-                    return $matches[0];
-                }
-                //get url from matches
-                $url = new URL($matches[2]);
-                if ($asset = $this->leafcutter->assets()->get($url)) {
-                    return 'url(' . $asset->publicUrl() . ')';
-                } else {
-                    return $matches[0];
-                }
-            },
-            $css
-        );
-        // minify if configured to do so
-        if ($this->leafcutter->config('theme.css.minify')) {
-            $minifier = new Minify\CSS($css);
-            $css = $minifier->minify();
-        }
-        // make new asset if CSS is changed
-        if ($css != $event->asset()->content()) {
-            $event->setAsset(new StringAsset($event->url(), $css));
-        }
-    }
-
-    /**
-     * Preprocesses JS assets
-     *
-     * @param AssetEvent $event
-     * @return void
-     */
-    public function onAssetReady_js(AssetEvent $event)
-    {
-        $js = $event->asset()->content();
-        // minify if configured to do so
-        if ($this->leafcutter->config('theme.js.minify')) {
-            $minifier = new Minify\JS($js);
-            $js = $minifier->minify();
-        }
-        // make new asset if JS is changed
-        if ($js != $event->asset()->content()) {
-            $event->setAsset(new StringAsset($event->url(), $js));
-        }
-    }
-
-    /**
-     * Compiles scss files into CSS, including resolving import paths
-     * using Leafcutter's content provider. Also imports theme variables
-     * from the theme provider.
-     *
-     * @param AssetFileEvent $event
-     * @return AssetInterface|null
-     */
-    public function onAssetFile_scss(AssetFileEvent $event): ?AssetInterface
-    {
-        $css = \file_get_contents($event->path());
-        $compiler = new \ScssPhp\ScssPhp\Compiler([]);
-        //set up variables
-        $compiler->setVariables(
-            $this->leafcutter->theme()->variables()->list()
-        );
-        // set up import callback for getting import files
-        $compiler->setImportPaths([]);
-        $compiler->addImportPath(function ($path) {
-            $this->leafcutter->logger()->debug('SCSS import: '.$path);
-            // try to include a raw scss file if possible
-            $url = new URL($path);
-            if ($url->sitePath()) {
-                foreach ($this->leafcutter->content()->files($url->sitePath(), $url->siteNamespace()) as $file) {
-                    $this->leafcutter->logger()->debug('Possible file match: '.$file->path());
-                    if (substr($file->path(), -5) == '.scss') {
-                        $this->leafcutter->logger()->debug('Matched: '.$file->path());
-                        return $file->path();
-                    }
-                }
-            }
-            // otherwise try to find CSS-ey files
-            if ($asset = $this->leafcutter->assets()->get($url)) {
-                $this->leafcutter->logger()->debug('Possible asset match: '.$asset->publicUrl());
-                if ($asset->extension() == 'css') {
-                    $this->leafcutter->logger()->debug('Matched: '.$asset->publicUrl());
-                    return $asset->outputFile();
-                }
-            }
-            // log failure
-            $this->leafcutter->logger()->error('Failed to load SCSS import file '.$path);
-        });
-        // set context, compile and output
-        URLFactory::beginContext($event->url());
-        $css = $compiler->compile($css);
-        URLFactory::endContext();
-        return new StringAsset($event->url(), $css);
-    }
-
-    public function loadTheme(string $name)
-    {
-        $this->leafcutter->logger()->debug('ThemeProvider: loadTheme: ' . $name);
+        $this->leafcutter->logger()->debug('ThemeProvider: registerTheme: ' . $name);
         $name = preg_replace('/[^a-z0-9\-_]/', '', $name);
         foreach ($this->directories as $dir) {
             $dir = "$dir/$name";
             $yaml = "$dir/theme.yaml";
             if (is_file($yaml)) {
-                $this->doLoadTheme($dir, $yaml);
+                $this->doRegisterTheme($dir, $yaml);
             }
         }
     }
 
-    public function loadPackage(string $name)
+    public function activate(string $name)
     {
-        $this->leafcutter->logger()->debug('ThemeProvider: loadPackage: ' . $name);
+        $this->leafcutter->logger()->debug('ThemeProvider: activate: ' . $name);
         if (isset($this->packages[$name])) {
-            $this->loadPackageFromConfig($this->packages[$name]);
+            $this->activatePackageFromConfig($this->packages[$name]);
         }
     }
 
-    protected function loadPackageFromConfig(Config $config)
+    protected function activatePackageFromConfig($config)
     {
+        //make sure $config is a Config
+        if (is_array($config)) {
+            $config = new Config($config);
+        }
         //pull requirements
         foreach ($config['require'] ?? [] as $p) {
-            $this->loadPackage($p);
+            $this->activate($p);
         }
         //set up advanced files (these don't get prefixed by theme name)
         foreach ($config['advanced'] ?? [] as $k => $f) {
@@ -273,11 +139,11 @@ class ThemeProvider
         }
         //pull require-after requirements
         foreach ($config['require-after'] ?? [] as $p) {
-            $this->loadPackage($p);
+            $this->activate($p);
         }
     }
 
-    protected function doLoadTheme($dir, $yaml)
+    protected function doRegisterTheme($dir, $yaml)
     {
         if (in_array($dir, $this->loadedThemes)) {
             return;
@@ -290,15 +156,22 @@ class ThemeProvider
         // set up packages, then remove them from config
         foreach ($config['packages'] ?? [] as $n => $p) {
             $package = new Config($config->get());
+            $package['theme.name'] = $n;
             unset($package['advanced']);
             unset($package['css']);
             unset($package['js']);
             unset($package['require']);
             $package->merge($p, null, true);
             $this->packages[$n] = $package;
+            if (isset($config['theme.name'])) {
+                $this->packages[$config['theme.name'] . "/$n"] = $config;
+            }
         }
-        // load theme package
-        $this->loadPackageFromConfig($config);
+        // set up theme as a package
+        $this->packages[basename($dir)] = $config;
+        if (isset($config['theme.name'])) {
+            $this->packages[$config['theme.name']] = $config;
+        }
     }
 
     public function addDirectory(string $dir)
@@ -312,77 +185,17 @@ class ThemeProvider
             array_unshift($this->directories, $dir);
             //add directory to "themes" namespace
             $this->leafcutter->content()->addDirectory($dir, 'themes');
+            //register all themes
+            foreach (glob($dir . '/*/theme.yaml') as $d) {
+                $name = basename(dirname($d));
+                $this->registerTheme($name);
+            }
         }
     }
 
     public function variables(): ThemeVariables
     {
         return $this->variables;
-    }
-
-    /**
-     * Load requested theme packages, page's _page CSS/JS files, and it plus all parents' _site files
-     *
-     * @param Response $response
-     * @return void
-     */
-    public function onResponseContentReady(Response $response)
-    {
-        // load requested packages
-        $packages = [];
-        // package requirements from page meta
-        if (($page = $response->source()) instanceof PageInterface) {
-            $packages = $page->meta('theme_packages') ?? [];
-        }
-        // scan for package requirements in content
-        $response->setText(preg_replace_callback(
-            '<!-- theme_package:([a-z0-9\-]+) -->',
-            function ($m) use (&$packages) {
-                $packages[] = $m[1];
-                return '';
-            },
-            $response->content()
-        ));
-        // load all packages
-        foreach (array_unique($packages) as $name) {
-            $this->loadPackage($name);
-        }
-        // set up URL context
-        $context = $response->url()->siteFullPath();
-        URLFactory::beginContext($context);
-        // load root _site files
-        if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.css"))) {
-            $this->addCss($asset->hash(), $asset, 'site');
-        }
-        if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.js"))) {
-            $this->addJs($asset->hash(), $asset, 'site');
-        }
-        // load all _site files for parent directories
-        $context = explode('/', $context);
-        $check = '';
-        foreach ($context as $c) {
-            $check .= "$c/";
-            if ($asset = $this->leafcutter->assets()->get(new URL("@/{$check}_site.css"))) {
-                $this->addCss($asset->hash(), $asset, 'site');
-            }
-            if ($asset = $this->leafcutter->assets()->get(new URL("@/{$check}_site.js"))) {
-                $this->addJs($asset->hash(), $asset, 'site');
-            }
-        }
-        // load _page CSS and JS files
-        if ($asset = $this->leafcutter->assets()->get(new URL("./_page.css"))) {
-            $this->addCss($asset->hash(), $asset, 'page');
-        }
-        if ($asset = $this->leafcutter->assets()->get(new URL("./_page.js"))) {
-            $this->addJs($asset->hash(), $asset, 'page');
-        }
-        // end context
-        URLFactory::endContext();
-    }
-
-    public function onTemplateInjection_head()
-    {
-        echo $this->getHeadHtml() . PHP_EOL;
     }
 
     public function getHeadHtml(): string

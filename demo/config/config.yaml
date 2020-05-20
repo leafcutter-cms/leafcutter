@@ -19,6 +19,7 @@ plugins:
     ttl: 30
 
 theme:
+  activate: [leafcutter-basic]
   css:
     bundle: false
     max_inlined: 102400
