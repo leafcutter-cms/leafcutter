@@ -47,7 +47,6 @@ class ThemeProvider
         $this->leafcutter = $leafcutter;
         $this->events = new ThemeEvents($leafcutter);
         $this->variables = new ThemeVariables($leafcutter);
-        $this->addDirectory(__DIR__ . '/../../themes');
         if (Themes::dir()) {
             $this->addDirectory(Themes::dir());
         }
