@@ -68,6 +68,28 @@ class URL
     }
 
     /**
+     * URL-safe base64 encoding
+     *
+     * @param string $data
+     * @return string
+     */
+    public static function base64_encode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    /**
+     * URL-safe base64 decoding
+     *
+     * @param string $data
+     * @return string
+     */
+    public static function base64_decode(string $data): string
+    {
+        return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
+    }
+
+    /**
      * Get the full URL as an encoded string ready to use in HTML.
      *
      * @return string
