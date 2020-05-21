@@ -31,7 +31,7 @@ class Config extends BaseConfig
         foreach (glob($dir . '/*.{yaml,yml,ini,json}', GLOB_BRACE) as $file) {
             $import = new BaseConfig();
             $import->readFile($file);
-            $this->merge($import->get(null), null, true);
+            $this->merge($import->get(null, true), null, true);
         }
     }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace Leafcutter\Addons;
 
+use Leafcutter\Composer\Addons;
 use Leafcutter\Leafcutter;
 
 class AddonProvider
@@ -19,7 +20,7 @@ class AddonProvider
     public function onLeafcutterConstructed()
     {
         // register any addons from Composer
-        foreach (Composer\Addons::addons() as $class) {
+        foreach (Addons::addons() as $class) {
             $this->leafcutter->logger()->debug("AddonProvider: Addon registered from Composer: $class");
             $this->register($class);
         }

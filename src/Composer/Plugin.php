@@ -57,7 +57,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         // empty out adjacent themes directory
         $fs->remove(glob(__DIR__ . '/themes/*', GLOB_ONLYDIR));
         // check for things that need updating
-        echo "Checking for Leafcutter addons/themes";
+        echo "Checking for Leafcutter addons/themes" . PHP_EOL;
         $packageData = self::getPackageData();
         $packageData[] = self::getThisPackageData();
         $addons = [];
