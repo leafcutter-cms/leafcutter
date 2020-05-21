@@ -36,24 +36,8 @@ class PageProvider
         }
     }
 
-    public function breadcrumb(PageInterface $page): array
-    {
-        $current = null;
-        $breadcrumb = [];
-        while ($current = $this->parent(($current ? $current->url() : null) ?? $page->url())) {
-            //watch for cycles
-            if (in_array($current, $breadcrumb)) {
-                return $breadcrumb;
-            }
-            //unshift latest page onto breadcrumb
-            \array_unshift($breadcrumb, $current);
-        }
-        return $breadcrumb;
-    }
-
     public function parent(URL $url): ?PageInterface
     {
-        //TODO: allow metadata to specify a parent
         $page = $this->get($url);
         if (!$page || $page->url()->siteFullPath() == '') {
             return null;

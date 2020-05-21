@@ -1,10 +1,9 @@
-{% if pages.breadcrumb(page) %}
+{% if page.breadcrumb|length > 1 %}
     <nav id="main-breadcrumb" class="breadcrumb" aria-label="Breadcrumb">
 
-        {% for bc in pages.breadcrumb(page) %}
+        {% for bc in page.breadcrumb %}
             <span class="breadcrumb-item">{{bc|link}}</span>
         {% endfor %}
-        <span class="breadcrumb-item">{{page|link}}</span>
 
     </nav>
 {% endif %}

@@ -34,8 +34,15 @@ class URL
             $string = preg_replace('/^@\//', URLFactory::site(), $string);
             $string = preg_replace('/^@ctx\//', URLFactory::context(), $string);
             // prefix context for URLs that are just a query/fragment
-            if (substr($string,0,1) == '?' || substr($string,0,1) == '#') {
-                $string = URLFactory::context().$string;
+            if (substr($string,0,1) == '?') {
+                $ctx = URLFactory::context();
+                $ctx->setQuery([]);
+                $string = $ctx.$string;
+            }
+            if (substr($string,0,1) == '#') {
+                $ctx = URLFactory::context();
+                $ctx->setFragment('');
+                $string = $ctx.$string;
             }
             // built-in parser is good
             $parsed = parse_url($string);

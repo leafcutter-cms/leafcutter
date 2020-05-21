@@ -76,7 +76,7 @@ class TemplateProvider
         $content = $page->content(false);
         $name = 'page_' . $page->hash();
         $page->setContent(function () use ($name, $page, $content) {
-            URLFactory::beginContext($page->url());
+            URLFactory::beginContext($page->calledURL());
             $this->addOverride($name, $content);
             $content = $this->apply(
                 $name,

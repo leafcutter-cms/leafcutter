@@ -5,6 +5,7 @@ use Flatrr\SelfReferencingFlatArray;
 use Leafcutter\Common\Collection;
 use Leafcutter\Leafcutter;
 use Leafcutter\URL;
+use Leafcutter\URLFactory;
 use Symfony\Component\Yaml\Yaml;
 
 class Page implements PageInterface
@@ -12,6 +13,7 @@ class Page implements PageInterface
     protected $content, $url, $meta;
     protected $dynamic = false;
     protected $template = 'default.twig';
+    protected $parent;
 
     public function __construct(URL $url, string $content)
     {
@@ -20,6 +22,7 @@ class Page implements PageInterface
             $url->setPath($url->path() . '/');
         }
         $this->url = $url;
+        $this->calledURL = $url;
         $this->meta = new SelfReferencingFlatArray([
             'date.generated' => time(),
             'unlisted' => false,
@@ -105,6 +108,11 @@ class Page implements PageInterface
         return clone $this->url;
     }
 
+    public function calledURL(): URL
+    {
+        return clone $this->calledURL;
+    }
+
     public function setUrl(URL $url)
     {
         $this->url = clone $url;
@@ -116,7 +124,7 @@ class Page implements PageInterface
             $this->setContent(($this->content)());
         }
         if ($wrap) {
-            return '<!--@beginContext:' . $this->url() . '-->' . $this->content . '<!--@endContext-->';
+            return '<!--@beginContext:' . $this->calledURL() . '-->' . $this->content . '<!--@endContext-->';
         }
         return $this->content;
     }
@@ -160,6 +168,31 @@ class Page implements PageInterface
 
     public function parent(): ?PageInterface
     {
-        return Leafcutter::get()->pages()->parent($this->url());
+        return $this->parent ?? Leafcutter::get()->pages()->parent($this->url());
+    }
+
+    public function breadcrumb(): array
+    {
+        $current = $this;
+        $breadcrumb = [$this];
+        while ($current = $current->parent()) {
+            //watch for cycles
+            if (in_array($current, $breadcrumb)) {
+                return $breadcrumb;
+            }
+            //unshift latest page onto breadcrumb
+            \array_unshift($breadcrumb, $current);
+        }
+        return $breadcrumb;
+    }
+
+    public function setParent($parent) {
+        if ($parent instanceof PageInterface) {
+            $this->parent = $parent;
+        }elseif (is_string($parent)) {
+            URLFactory::beginContext($this->calledURL());
+            $this->parent = Leafcutter::get()->pages()->get(new URL($parent));
+            URLFactory::endContext();
+        }
     }
 }
