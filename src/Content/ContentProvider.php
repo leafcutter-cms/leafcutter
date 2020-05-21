@@ -64,6 +64,7 @@ class ContentProvider implements ContentProviderInterface
 
     public function files(string $path, string $namespace = null): array
     {
+        $this->leafcutter->logger()->debug("ContentProvider: files: $path $namespace");
         $result = [];
         foreach ($this->providers($namespace) as $provider) {
             $result = array_merge(array_values($provider->files($path)), $result);
@@ -77,6 +78,7 @@ class ContentProvider implements ContentProviderInterface
 
     public function directories(string $path, string $namespace = null): array
     {
+        $this->leafcutter->logger()->debug("ContentProvider: directories: $path $namespace");
         $result = [];
         foreach ($this->providers($namespace) as $provider) {
             $result = array_merge(array_values($provider->directories($path)), $result);

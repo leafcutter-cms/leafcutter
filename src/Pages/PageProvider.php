@@ -168,6 +168,7 @@ class PageProvider
         // allow URLs to be transformed
         $this->leafcutter->events()
             ->dispatchEvent('onPageURL', $url);
+        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
         // allow pages to fully bypass entire return system
         $page =
         $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ??
