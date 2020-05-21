@@ -335,8 +335,8 @@ overlay colors/opacity
 
     .colors-light &,
     .colors-dark .colors-light & {
-        background-color: $bg-overlay;
-        background-color: rgba($bg-overlay, $bg-overlay-opacity);
+        background-color: $bg-overlay-light;
+        background-color: rgba($bg-overlay-light, $bg-overlay-opacity);
     }
 
     .colors-dark &,

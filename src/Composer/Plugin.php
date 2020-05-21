@@ -64,12 +64,12 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         foreach ($packageData as $p) {
             // list addons in text file for later registration
             if ($p['type'] == 'leafcutter-addon') {
-                echo "leafcutter-addon: {$p['name']}" . PHP_EOL;
+                echo "leafcutter addon: {$p['name']}" . PHP_EOL;
                 $addons[] = $p['extra']['leafcutter-addon'];
             }
             // copy themes into the adjacent themes directory
             if ($p['type'] == 'leafcutter-theme') {
-                echo "leafcutter-theme: {$p['name']}" . PHP_EOL;
+                echo "leafcutter theme: {$p['name']}" . PHP_EOL;
                 $src = self::getPackageDirectory($p['name']);
                 $dest = __DIR__ . '/themes/' . basename($p['name']);
                 $fs->mirror($src, $dest);
