@@ -202,10 +202,10 @@ class ThemeEvents
         URLFactory::beginContext($context);
         // load root _site files
         if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.css"))) {
-            $this->addCss($asset->hash(), $asset, 'site');
+            $this->leafcutter->theme()->addCss($asset->hash(), $asset, 'site');
         }
         if ($asset = $this->leafcutter->assets()->get(new URL("@/_site.js"))) {
-            $this->addJs($asset->hash(), $asset, 'site');
+            $this->leafcutter->theme()->addJs($asset->hash(), $asset, 'site');
         }
         // load all _site files for parent directories
         $context = explode('/', $context);
@@ -213,18 +213,18 @@ class ThemeEvents
         foreach ($context as $c) {
             $check .= "$c/";
             if ($asset = $this->leafcutter->assets()->get(new URL("@/{$check}_site.css"))) {
-                $this->addCss($asset->hash(), $asset, 'site');
+                $this->leafcutter->theme()->addCss($asset->hash(), $asset, 'site');
             }
             if ($asset = $this->leafcutter->assets()->get(new URL("@/{$check}_site.js"))) {
-                $this->addJs($asset->hash(), $asset, 'site');
+                $this->leafcutter->theme()->addJs($asset->hash(), $asset, 'site');
             }
         }
         // load _page CSS and JS files
         if ($asset = $this->leafcutter->assets()->get(new URL("./_page.css"))) {
-            $this->addCss($asset->hash(), $asset, 'page');
+            $this->leafcutter->theme()->addCss($asset->hash(), $asset, 'page');
         }
         if ($asset = $this->leafcutter->assets()->get(new URL("./_page.js"))) {
-            $this->addJs($asset->hash(), $asset, 'page');
+            $this->leafcutter->theme()->addJs($asset->hash(), $asset, 'page');
         }
         // end context
         URLFactory::endContext();
