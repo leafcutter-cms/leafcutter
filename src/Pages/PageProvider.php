@@ -165,10 +165,13 @@ class PageProvider
             return $this->error($url, 555);
         }
         $this->stack[] = "$url";
+        // allow URLs to be transformed
+        $this->leafcutter->events()
+            ->dispatchEvent('onPageURL', $url);
         // allow pages to fully bypass entire return system
         $page =
-        $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageURL_namespace_' . $url->siteNamespace(), $url) : null ??
-        $this->leafcutter->events()->dispatchFirst('onPageURL', $url);
+        $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ??
+        $this->leafcutter->events()->dispatchFirst('onPageGet', $url);
         if ($page) {
             array_pop($this->stack);
             URLFactory::endContext();
@@ -176,8 +179,8 @@ class PageProvider
         }
         // allow events to build pages from any URL
         $page =
-        $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ??
-        $this->leafcutter->events()->dispatchFirst('onPageGet', $url);
+        $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageBuild_namespace_' . $url->siteNamespace(), $url) : null ??
+        $this->leafcutter->events()->dispatchFirst('onPageBuild', $url);
         // otherwise attempt to make a page from content files
         if (!$page) {
             $path = $this->searchPath($url->sitePath());
