@@ -116,6 +116,9 @@ class DOMProvider
         $node = $event->getNode();
         // try to parse URL
         $url = $node->getAttribute($urlAttribute);
+        if (substr($url,0,5) == 'data:') {
+            return;
+        }
         if (!$url || !($url = new URL($url))) {
             return;
         }

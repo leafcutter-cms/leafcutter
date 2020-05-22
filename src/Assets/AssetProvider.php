@@ -2,6 +2,7 @@
 namespace Leafcutter\Assets;
 
 use Leafcutter\Common\Collection;
+use Leafcutter\DOM\DOMEvent;
 use Leafcutter\Leafcutter;
 use Leafcutter\URL;
 use Leafcutter\URLFactory;
@@ -14,6 +15,16 @@ class AssetProvider
     {
         $this->leafcutter = $leafcutter;
         $this->leafcutter->events()->addSubscriber($this);
+    }
+
+    public function onDOMElement_link(DOMEvent $event)
+    {
+        $this->leafcutter->dom()->prepareLinkAttribute($event, 'href', false);
+    }
+
+    public function onDOMElement_script(DOMEvent $event)
+    {
+        $this->leafcutter->dom()->prepareLinkAttribute($event, 'src', false);
     }
 
     public function onAssetFile_UNMATCHED(AssetFileEvent $event): ?AssetInterface

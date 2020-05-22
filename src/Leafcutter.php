@@ -94,6 +94,7 @@ class Leafcutter
         if ($page) {
             $this->events()->dispatchEvent('onResponsePageReady', $page);
             $response->setSource($page);
+            $this->events()->dispatchEvent('onResponsePageSet', $response);
         }
         $this->events()->dispatchEvent('onResponseReady', $response);
         $this->events()->dispatchEvent('onResponseReturn', $response);

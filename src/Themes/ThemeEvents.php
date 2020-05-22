@@ -176,14 +176,12 @@ class ThemeEvents
      * @param Response $response
      * @return void
      */
-    public function onResponseContentReady(Response $response)
+    public function onResponsePageSet(Response $response)
     {
         // load requested packages
-        $packages = [];
+        $page = $response->source();
         // package requirements from page meta
-        if (($page = $response->source()) instanceof PageInterface) {
-            $packages = $page->meta('theme_packages') ?? [];
-        }
+        $packages = $page->meta('theme_packages') ?? [];
         // scan for package requirements in content
         $response->setText(preg_replace_callback(
             '<!-- theme_package:([a-z0-9\-]+) -->',
@@ -195,8 +193,19 @@ class ThemeEvents
         ));
         // load all packages
         foreach (array_unique($packages) as $name) {
-            $this->loadPackage($name);
+            $this->leafcutter->theme()->activate($name);
         }
+        // specific css/js from page meta
+        URLFactory::beginContext($page->calledURL());
+        foreach ($page->meta('page_js') ?? [] as $url) {
+            $url = new URL($url);
+            $this->leafcutter->theme()->addJs('page_js_' . md5($url), $url, 'page');
+        }
+        foreach ($page->meta('page_css') ?? [] as $url) {
+            $url = new URL($url);
+            $this->leafcutter->theme()->addCss('page_css_' . md5($url), $url, 'page');
+        }
+        URLFactory::endContext();
         // set up URL context
         $context = $response->url()->siteFullPath();
         URLFactory::beginContext($context);

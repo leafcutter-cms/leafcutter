@@ -55,11 +55,6 @@ class ImageProvider
         $this->leafcutter->dom()->prepareLinkAttribute($event, 'src', false);
     }
 
-    public function onDOMElement_link(DOMEvent $event)
-    {
-        $this->leafcutter->dom()->prepareLinkAttribute($event, 'href', false);
-    }
-
     public function search($search, array $query = [], string $namespace = null): Gallery
     {
         $images = [];

@@ -98,6 +98,24 @@ class PageProvider
         return $page;
     }
 
+    public function onPageFile_html(PageFileEvent $e)
+    {
+        $content = file_get_contents($e->path());
+        $url = $e->url();
+        $url->setQuery([]);
+        $page = new Page($url, $content);
+        return $page;
+    }
+
+    public function onPageFile_htm(PageFileEvent $e)
+    {
+        $content = file_get_contents($e->path());
+        $url = $e->url();
+        $url->setQuery([]);
+        $page = new Page($url, $content);
+        return $page;
+    }
+
     public function error(URL $url, int $code, int $originalCode = null): ?PageInterface
     {
         // try to find a relevant error page in _error_page/[code] somewhere in the

@@ -142,6 +142,7 @@ class Page implements PageInterface
                     $meta = Yaml::parse($match[1]);
                     $this->meta->merge($meta, null, true);
                 } catch (\Throwable $th) {
+                    Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $this->calledURL());
                     // throw $th;
                 }
                 return '';
@@ -186,10 +187,11 @@ class Page implements PageInterface
         return $breadcrumb;
     }
 
-    public function setParent($parent) {
+    public function setParent($parent)
+    {
         if ($parent instanceof PageInterface) {
             $this->parent = $parent;
-        }elseif (is_string($parent)) {
+        } elseif (is_string($parent)) {
             URLFactory::beginContext($this->calledURL());
             $this->parent = Leafcutter::get()->pages()->get(new URL($parent));
             URLFactory::endContext();
