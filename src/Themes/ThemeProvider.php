@@ -161,16 +161,20 @@ class ThemeProvider
             unset($package['js']);
             unset($package['require']);
             $package->merge($p, null, true);
-            $this->packages[$n] = $package;
-            if (isset($config['theme.name'])) {
-                $this->packages[$config['theme.name'] . "/$n"] = $config;
-            }
+            $this->setPackage($n, $package);
         }
         // set up theme as a package
-        $this->packages[basename($dir)] = $config;
-        if (isset($config['theme.name'])) {
-            $this->packages[$config['theme.name']] = $config;
+        $this->setPackage(basename($dir), $config);
+    }
+
+    protected function setPackage(string $name, Config $package)
+    {
+        if ($existing = @$this->packages[$name]) {
+            if ($existing['priority'] > $package['priority']) {
+                return;
+            }
         }
+        $this->packages[$name] = $package;
     }
 
     public function addDirectory(string $dir)
