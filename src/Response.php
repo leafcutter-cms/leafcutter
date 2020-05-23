@@ -1,6 +1,8 @@
 <?php
 namespace Leafcutter;
 
+use Leafcutter\Pages\PageInterface;
+
 class Response
 {
     const ALLOWED_STATUS = [200, 300, 301, 302, 307, 308, 400, 401, 403, 404, 500, 503];
@@ -105,6 +107,15 @@ class Response
     public function source()
     {
         return $this->source;
+    }
+
+    public function page() : ?PageInterface
+    {
+        if ($this->source instanceof PageInterface) {
+            return $this->source;
+        }else {
+            return null;
+        }
     }
 
     public function setSource($source)

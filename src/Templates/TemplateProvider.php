@@ -104,7 +104,7 @@ class TemplateProvider
         return $this->twig()->render($name, $parameters);
     }
 
-    public function onResponseReady(Response $response)
+    public function onResponseTemplate(Response $response)
     {
         $template = $response->template();
         if (!$template) {
