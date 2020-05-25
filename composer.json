@@ -35,5 +35,9 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9"
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit tests",
+        "test-win": "./vendor/bin/phpunit tests"
     }
 }
