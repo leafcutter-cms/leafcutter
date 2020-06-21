@@ -47,11 +47,11 @@ class Plugin implements PluginInterface, EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return array(
-            'post-autoload-dump' => 'postAutoloadDump',
+            'post-update-cmd' => 'findThemesAndAddons',
         );
     }
 
-    public function postAutoloadDump()
+    public function findThemesAndAddons()
     {
         $fs = new Filesystem();
         // empty out adjacent themes directory
