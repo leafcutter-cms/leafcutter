@@ -37,6 +37,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
     public const ROOT_PACKAGE_NAME = 'unknown/root-package@UNKNOWN';
     protected $composer;
     protected $io;
+    protected $found = null;
 
     public function activate(Composer $composer, IOInterface $io)
     {
@@ -62,14 +63,18 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         $packageData[] = self::getThisPackageData();
         $addons = [];
         foreach ($packageData as $p) {
+            if (@$this->found[$p['name']]) {
+                continue;
+            }
+            $this->found[$p['name']] = true;
             // list addons in text file for later registration
             if ($p['type'] == 'leafcutter-addon') {
-                echo "leafcutter addon: {$p['name']}" . PHP_EOL;
+                echo "registering addon: {$p['name']}" . PHP_EOL;
                 $addons[] = $p['extra']['leafcutter-addon'];
             }
             // copy themes into the adjacent themes directory
             if ($p['type'] == 'leafcutter-theme') {
-                echo "leafcutter theme: {$p['name']}" . PHP_EOL;
+                echo "installing theme: {$p['name']}" . PHP_EOL;
                 $src = self::getPackageDirectory($p['name']);
                 $dest = __DIR__ . '/themes/' . basename($p['name']);
                 $fs->mirror($src, $dest);
