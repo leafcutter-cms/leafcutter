@@ -25,7 +25,7 @@ class ThemeProvider
         'library', //loads first, basically where anything external should go
         'blocking', //loads first after library, used to get first in line for inlining
         'theme', //theme
-        'all', //media queries are fine, but it's better to keep medias in separate files
+        'all', //media queries are fine, but it's preferred to keep medias in separate files
         'screen',
         'print',
         'speech',

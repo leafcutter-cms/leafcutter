@@ -11,7 +11,7 @@
     "prefer-stable": true,
     "require": {
         "php": "^7.1",
-        "byjoby/flatrr": "^1.2",
+        "byjoby/flatrr": "^1.3",
         "erusev/parsedown-extra": "^0.8.1",
         "twig/twig": "~2",
         "scssphp/scssphp": "~1",

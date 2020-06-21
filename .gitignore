@@ -8,6 +8,7 @@
 /demo/**/*.html
 /demo/content/*
 !/demo/content/index.md
+env.yaml
 
 /src/Composer/*.txt
 /src/Composer/themes/*

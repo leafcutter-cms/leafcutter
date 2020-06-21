@@ -12,6 +12,7 @@ date_default_timezone_set("America/Denver");
 $config = new Config\Config();
 $config['base_dir'] = __DIR__;
 $config->readDir(__DIR__ . '/config/');
+$config->readFile(__DIR__ . '/config/env.yaml', null, true);
 
 //initialize logger
 $logger = new Logger('leafcutter');

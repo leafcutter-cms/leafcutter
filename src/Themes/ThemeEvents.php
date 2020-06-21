@@ -1,13 +1,11 @@
 <?php
 namespace Leafcutter\Themes;
 
-use Flatrr\Config\Config;
 use Leafcutter\Assets\AssetEvent;
 use Leafcutter\Assets\AssetFileEvent;
 use Leafcutter\Assets\AssetInterface;
 use Leafcutter\Assets\StringAsset;
 use Leafcutter\Leafcutter;
-use Leafcutter\Pages\PageInterface;
 use Leafcutter\Response;
 use Leafcutter\URL;
 use Leafcutter\URLFactory;
