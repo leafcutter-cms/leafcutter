@@ -148,18 +148,18 @@ class ThemeProvider
             return;
         }
         $this->loadedThemes[] = $dir;
-        $config = new Config([
-            'theme.prefix' => "@/~themes/" . basename($dir) . "/",
-        ]);
+        $config = new Config();
         $config->readFile($yaml);
+        $config['theme.prefix'] = "@/~themes/" . basename($dir) . "/";
+        $basePackage = clone ($config);
+        unset($basePackage['advanced']);
+        unset($basePackage['css']);
+        unset($basePackage['js']);
+        unset($basePackage['require']);
         // set up packages, then remove them from config
         foreach ($config['packages'] ?? [] as $n => $p) {
-            $package = new Config($config->get());
-            $package['theme.name'] = $n;
-            unset($package['advanced']);
-            unset($package['css']);
-            unset($package['js']);
-            unset($package['require']);
+            $package = clone $basePackage;
+            $p['theme']['name'] = $n;
             $package->merge($p, null, true);
             $this->setPackage($n, $package);
         }
