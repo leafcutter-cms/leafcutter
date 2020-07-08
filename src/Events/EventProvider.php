@@ -61,8 +61,11 @@ class EventProvider
      * @param object $event
      * @return object
      */
-    public function dispatchEvent(string $method, object $event): object
+    public function dispatchEvent(string $method, $event)
     {
+        if (!is_object($event)) {
+            throw new \Exception("\$event must be an object");
+        }
         $this->leafcutter->logger()->debug('EventProvider: dispatchEvent: ' . $method . ': ' . $this->logSubject($event));
         foreach ($this->subscribers[$method] ?? [] as $fn) {
             $this->leafcutter->logger()->debug('EventProvider: handler: ' . get_class($fn[0]) . '::' . $fn[1]);
@@ -80,8 +83,11 @@ class EventProvider
      * @param object $subscriber
      * @return void
      */
-    public function addSubscriber(object $subscriber)
+    public function addSubscriber($subscriber)
     {
+        if (!is_object($subscriber)) {
+            throw new \Exception("\$subscriber must be an object");
+        }
         foreach ($this->getMethods($subscriber) as $method) {
             $this->subscribers[$method][] = [$subscriber, $method];
         }
@@ -93,8 +99,11 @@ class EventProvider
      * @param object $subscriber
      * @return void
      */
-    public function removeSubscriber(object $subscriber)
+    public function removeSubscriber($subscriber)
     {
+        if (!is_object($subscriber)) {
+            throw new \Exception("\$subscriber must be an object");
+        }
         foreach ($this->getMethods($subscriber) as $method) {
             $this->subscribers[$method] = array_filter(
                 $this->subscribers[$method],
@@ -111,8 +120,11 @@ class EventProvider
      * @param object $subscriber
      * @return array
      */
-    protected function getMethods(object $subscriber): array
+    protected function getMethods($subscriber): array
     {
+        if (!is_object($subscriber)) {
+            throw new \Exception("\$subscriber must be an object");
+        }
         return array_filter(
             get_class_methods($subscriber),
             function ($e) {
