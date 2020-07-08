@@ -150,7 +150,15 @@ class URL
      */
     public function setExtension(string $extension)
     {
-        $this->path = preg_replace('@\.[a-z0-9]+$@', ".$extension", $this->path);
+        if ($this->extension()) {
+            if ($extension) {
+                $this->path = preg_replace('@\.[a-z0-9]+$@', ".$extension", $this->path);
+            }else {
+                $this->path = preg_replace('@\.[a-z0-9]+$@', "", $this->path);
+            }
+        }elseif ($extension) {
+            $this->path .= ".$extension";
+        }
     }
 
     /**
@@ -182,7 +190,8 @@ class URL
     }
 
     /**
-     * Return the siteFullPath() witha ny leading namespace portion removed.
+     * Return the siteFullPath() with any leading namespace portion removed.
+     * Does not include leading slash.
      *
      * @return string|null
      */
@@ -288,6 +297,9 @@ class URL
         // place path in context
         if (@$path[0] !== '') {
             $context = URLFactory::context();
+            if (!$context) {
+                throw new \Exception("No context to place path in");
+            }
             $pathDirectory = $context->pathDirectory();
             if ($pathDirectory !== '/') {
                 $pathDirectory = substr($pathDirectory, 0, strlen($pathDirectory) - 1);
