@@ -2,6 +2,7 @@
 
 ![MIT License](https://img.shields.io/github/license/leafcutter-cms/leafcutter)
 [![Build Status](https://travis-ci.org/leafcutter-cms/leafcutter.svg?branch=main)](https://travis-ci.org/leafcutter-cms/leafcutter)
+[![Coverage Status](https://coveralls.io/repos/github/leafcutter-cms/leafcutter/badge.svg?branch=main)](https://coveralls.io/github/leafcutter-cms/leafcutter?branch=main)
 
 Leafcutter is designed to be a an extremely simple but extensible CMS, with a bare-bones installation providing nothing but flat-file Markdown transformations and some basic theming and image processing tools. The core concept is to build a CMS that starts with as little complexity and attack surface as possible, and break as many additional features as possible out into optional addons.
 
