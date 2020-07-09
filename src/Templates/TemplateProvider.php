@@ -111,7 +111,7 @@ class TemplateProvider
             return;
         }
         $content = $response->content();
-        $response->setText($this->apply(
+        $response->setContent($this->apply(
             $template,
             [
                 'page_content' => $content,

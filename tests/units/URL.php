@@ -49,6 +49,26 @@ class URL extends atoum\test
         URLFactory::endSite();
     }
 
+    public function testPartialConstructs()
+    {
+        URLFactory::beginSite("https://www.google.com/");
+        $this->given($url = new LeafcutterURL('?foo=bar'))
+            ->array($url->query())->isIdenticalTo(['foo'=>'bar']);
+        $this->given($url = new LeafcutterURL('#foobar'))
+            ->string($url->fragment())->isEqualTo('foobar');
+        URLFactory::endSite();
+    }
+
+    public function testInSite()
+    {
+        URLFactory::beginSite("https://www.google.com/");
+        $this->given($url = new LeafcutterURL('https://www.goggles.org/foo/bar'))
+            ->boolean($url->inSite())->isFalse()
+            ->variable($url->siteFullPath())->isNull()
+            ->variable($url->siteNamespace())->isNull();
+        URLFactory::endSite();
+    }
+
     public function testVagueConstruct()
     {
         URLFactory::beginSite('https://www.google.com/');

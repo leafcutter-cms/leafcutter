@@ -96,7 +96,7 @@ class DOMProvider
         if (substr($response->content(), 0, 9) != '<!doctype') {
             return;
         }
-        $response->setText(
+        $response->setContent(
             $this->html($response->content())
         );
     }

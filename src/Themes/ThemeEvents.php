@@ -181,7 +181,7 @@ class ThemeEvents
         // package requirements from page meta
         $packages = $page->meta('theme_packages') ?? [];
         // scan for package requirements in content
-        $response->setText(preg_replace_callback(
+        $response->setContent(preg_replace_callback(
             '<!-- theme_package:([a-z0-9\-]+) -->',
             function ($m) use (&$packages) {
                 $packages[] = $m[1];

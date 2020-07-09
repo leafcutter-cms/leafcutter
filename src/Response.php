@@ -5,15 +5,16 @@ use Leafcutter\Pages\PageInterface;
 
 class Response
 {
-    const ALLOWED_STATUS = [200, 300, 301, 302, 307, 308, 400, 401, 403, 404, 500, 503];
     private $status = 200;
-    private $text = '';
+    private $content = '';
     private $source;
     private $headers = [];
     private $template = 'default.twig';
     private $dynamic = false;
     private $after = [];
     private $url;
+    private $mime = 'text/html';
+    private $charset = 'utf-8';
 
     public function setURL(URL $url)
     {
@@ -31,6 +32,7 @@ class Response
         foreach ($this->headers as $key => $value) {
             header("$key: $value");
         }
+        header('content-type: '.$this->mime.'; charset='.$this->charset);
     }
 
     public function doAfter(callable $fn)
@@ -40,7 +42,12 @@ class Response
 
     public function setMime(string $mime)
     {
-        $this->header('content-type', $mime . '; charset=utf-8');
+        $this->mime = $mime;
+    }
+
+    public function setCharset(string $charset)
+    {
+        $this->charset = $charset;
     }
 
     public function dynamic(): bool
@@ -53,7 +60,7 @@ class Response
         $this->dynamic = $dynamic;
     }
 
-    public function template(): ?string
+    public function template(): string
     {
         return $this->template;
     }
@@ -65,23 +72,26 @@ class Response
 
     public function content()
     {
-        return $this->text();
+        return $this->content;
+    }
 
+    public function setContent(string $content)
+    {
+        $this->content = $content;
     }
 
     public function renderContent()
     {
         echo $this->content();
         if ($this->after) {
-            \ignore_user_abort(false);
-            if (\function_exists('\fastcgi_finish_request')) {
-                \fastcgi_finish_request();
+            ignore_user_abort(false);
+            if (function_exists('\fastcgi_finish_request')) {
+                fastcgi_finish_request();
                 $this->callDoAfter();
             } else {
-                \register_shutdown_function(function () {
+                register_shutdown_function(function () {
                     $this->callDoAfter();
                 });
-                exit();
             }
         }
     }
@@ -137,18 +147,8 @@ class Response
         $this->status = $status;
     }
 
-    public function setText(?string $text)
-    {
-        $this->text = $text;
-    }
-
     public function status(): int
     {
         return $this->status;
-    }
-
-    public function text(): ?string
-    {
-        return $this->text;
     }
 }

@@ -140,8 +140,6 @@ class URL
             }else {
                 $this->path = preg_replace('@\.[a-z0-9]+$@', "", $this->path);
             }
-        }elseif ($extension) {
-            $this->path .= ".$extension";
         }
     }
 
