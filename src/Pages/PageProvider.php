@@ -6,6 +6,7 @@ use Leafcutter\Content\Content;
 use Leafcutter\Leafcutter;
 use Leafcutter\URL;
 use Leafcutter\URLFactory;
+use Symfony\Component\Yaml\Yaml;
 
 class PageProvider
 {
@@ -18,7 +19,7 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
-    public function onPageContentString(PageContentEvent $event)
+    public function onPageContentHTML(PageContentEvent $event)
     {
         $content = $event->content();
         $page = $event->page();
@@ -27,10 +28,12 @@ class PageProvider
                 $meta = Yaml::parse($match[1]);
                 $page->metaMerge($meta);
             } catch (\Throwable $th) {
+                Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledURL());
                 // throw $th;
             }
             return '';
         }, $content);
+        $event->setContent($content);
         if (!$page->meta('name') && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
             $page->meta('name', trim(strip_tags($matches[1])));
         }

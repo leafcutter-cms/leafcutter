@@ -137,16 +137,10 @@ class Page implements PageInterface
                 'onPageContentString',
                 $event
             );
-            $content = preg_replace_callback('/<!--@meta(.+?)-->/ms', function ($match) {
-                try {
-                    $meta = Yaml::parse($match[1]);
-                    $this->meta->merge($meta, null, true);
-                } catch (\Throwable $th) {
-                    Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $this->calledURL());
-                    // throw $th;
-                }
-                return '';
-            }, $content);
+            Leafcutter::get()->events()->dispatchAll(
+                'onPageContentHTML',
+                $event
+            );
             if (!$this->meta['name'] && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
                 $this->meta['name'] = trim(strip_tags($matches[1]));
             }
