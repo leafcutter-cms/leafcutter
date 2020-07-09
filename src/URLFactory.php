@@ -18,6 +18,7 @@ class URLFactory
      *
      * @param URL $current
      * @param boolean $useScheme
+     * @param boolean $fixSlashes
      * @return boolean whether a redirect should be done
      */
     public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true): bool
@@ -164,8 +165,4 @@ class URLFactory
         return clone $current;
     }
 
-    private function __construct()
-    {
-        //static class
-    }
 }

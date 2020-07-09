@@ -5,8 +5,23 @@ use atoum;
 use Leafcutter\URL as LeafcutterURL;
 use Leafcutter\URLFactory;
 
-class URL extends atoum
+class URL extends atoum\test
 {
+    public function testBase64()
+    {
+        $testString = 'abc!@#';
+        $this->string($enc = LeafcutterURL::base64_encode($testString))
+            ->string($dec = LeafcutterURL::base64_decode($enc))
+            ->isEqualTo($testString)
+        ;
+    }
+
+    public function testLogString()
+    {
+        $this->object($url = new LeafcutterURL('https://www.google.com/'))
+            ->string($url->logString());
+    }
+
     public function testConstruct()
     {
         URLFactory::beginSite("https://www.google.com/");
@@ -32,6 +47,27 @@ class URL extends atoum
             ->string($url->fragment())->isEqualTo('fragment')
         ;
         URLFactory::endSite();
+    }
+
+    public function testVagueConstruct()
+    {
+        URLFactory::beginSite('https://www.google.com/');
+        $this->object($url = new LeafcutterURL('/foo/bar.html'))
+            ->string($url->scheme())->isEqualTo('https')
+            ->string($url->host())->isEqualTo('www.google.com')
+        ;
+        URLFactory::endSite();
+        // throw exceptions without a site
+        $this->object($url = new LeafcutterURL('/foo/bar.html'))
+            ->exception(function () use ($url) {
+                $url->host();
+            });
+    }
+
+    public function testSpecificConstruct()
+    {
+        $this->object($url = new LeafcutterURL('http://www.google.com:80/'))
+            ->string($url->__toString())->isEqualTo('http://www.google.com/');
     }
 
     public function testPathSetters()
@@ -71,7 +107,7 @@ class URL extends atoum
             ->string($url->__toString())->isEqualTo('https://www.google.com:8080/');
         //set query
         $this->given($url = new LeafcutterURL('https://www.google.com/'))
-            ->and($url->setQuery(['foo'=>'bar']))
+            ->and($url->setQuery(['foo' => 'bar']))
             ->string($url->__toString())->isEqualTo('https://www.google.com/?foo=bar');
         //end context site
         URLFactory::endSite();

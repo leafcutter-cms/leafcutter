@@ -23,59 +23,43 @@ class URL
      * @param string $string
      * @param URL $context
      */
-    public function __construct(string $string, URL $context = null)
+    public function __construct(string $string)
     {
-        // set context
-        if ($context) {
-            URLFactory::beginContext($context);
+        // allow @ctx or @ prefixes for context/site, respectively
+        $string = preg_replace('/^@\//', URLFactory::site(), $string);
+        $string = preg_replace('/^@ctx\//', URLFactory::context(), $string);
+        // prefix context for URLs that are just a query/fragment
+        if (substr($string,0,1) == '?') {
+            $ctx = URLFactory::context();
+            $ctx->setQuery([]);
+            $string = $ctx.$string;
         }
-        try {
-            // allow @ctx or @ prefixes for context/site, respectively
-            $string = preg_replace('/^@\//', URLFactory::site(), $string);
-            $string = preg_replace('/^@ctx\//', URLFactory::context(), $string);
-            // prefix context for URLs that are just a query/fragment
-            if (substr($string,0,1) == '?') {
-                $ctx = URLFactory::context();
-                $ctx->setQuery([]);
-                $string = $ctx.$string;
-            }
-            if (substr($string,0,1) == '#') {
-                $ctx = URLFactory::context();
-                $ctx->setFragment('');
-                $string = $ctx.$string;
-            }
-            // built-in parser is good
-            $parsed = parse_url($string);
-            // set scheme
-            if (@$parsed['scheme']) {
-                $this->setScheme($parsed['scheme']);
-            }
-            // set host
-            if (@$parsed['host']) {
-                $this->setHost($parsed['host']);
-            }
-            // set port
-            if (@$parsed['port']) {
-                $this->setPort($parsed['port']);
-            }
-            // path, query, fragment are now straightforward
-            $this->setPath(@$parsed['path'] ?? '/');
-            if (@$parsed['query']) {
-                parse_str($parsed['query'], $query);
-                $this->setQuery($query);
-            }
-            $this->setFragment($parsed['fragment'] ?? '');
-        } catch (\Throwable $th) {
-            // catch errors and end context before rethrowing them
-            if ($context) {
-                URLFactory::endContext();
-            }
-            throw $th;
+        if (substr($string,0,1) == '#') {
+            $ctx = URLFactory::context();
+            $ctx->setFragment('');
+            $string = $ctx.$string;
         }
-        // end context
-        if ($context) {
-            URLFactory::endContext();
+        // built-in parser is good
+        $parsed = parse_url($string);
+        // set scheme
+        if (@$parsed['scheme']) {
+            $this->setScheme($parsed['scheme']);
         }
+        // set host
+        if (@$parsed['host']) {
+            $this->setHost($parsed['host']);
+        }
+        // set port
+        if (@$parsed['port']) {
+            $this->setPort($parsed['port']);
+        }
+        // path, query, fragment are now straightforward
+        $this->setPath(@$parsed['path'] ?? '/');
+        if (@$parsed['query']) {
+            parse_str($parsed['query'], $query);
+            $this->setQuery($query);
+        }
+        $this->setFragment($parsed['fragment'] ?? '');
     }
 
     /**
@@ -119,9 +103,9 @@ class URL
     /**
      * Return a string to be used in logging contexts
      *
-     * @return void
+     * @return string
      */
-    public function logString()
+    public function logString() : string
     {
         return $this->__toString();
     }
@@ -428,7 +412,7 @@ class URL
             if ($site = URLFactory::site()) {
                 return $site->host();
             } else {
-                throw new Exception("No site to get host from");
+                throw new \Exception("No site to get host from");
             }
         }
         return $this->host;

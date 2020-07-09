@@ -39,6 +39,7 @@
     },
     "require-dev": {
         "atoum/atoum": "^3.4",
-        "atoum/stubs": "^2.6"
+        "atoum/stubs": "^2.6",
+        "atoum/visibility-extension": "^1.3"
     }
 }
