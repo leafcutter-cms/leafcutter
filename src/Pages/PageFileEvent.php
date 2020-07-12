@@ -1,6 +1,7 @@
 <?php
 namespace Leafcutter\Pages;
 
+use Leafcutter\Leafcutter;
 use Leafcutter\URL;
 
 class PageFileEvent
@@ -21,5 +22,15 @@ class PageFileEvent
     public function url(): URL
     {
         return clone $this->url;
+    }
+
+    public function getContents(): string
+    {
+        $content = file_get_contents($this->path());
+        $content = Leafcutter::get()->events()->dispatchAll(
+            'onPageFileContents',
+            $content
+        );
+        return $content;
     }
 }

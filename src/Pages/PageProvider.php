@@ -19,7 +19,7 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
-    public function onPageContentHTML(PageContentEvent $event)
+    public function onPageContent(PageContentEvent $event)
     {
         $content = $event->content();
         $page = $event->page();
@@ -93,7 +93,7 @@ class PageProvider
 
     public function onPageFile_md(PageFileEvent $e)
     {
-        $content = file_get_contents($e->path());
+        $content = $e->getContents();
         $content = $this->markdown()->text($content);
         $url = $e->url();
         $url->setQuery([]);
@@ -103,7 +103,7 @@ class PageProvider
 
     public function onPageFile_html(PageFileEvent $e)
     {
-        $content = file_get_contents($e->path());
+        $content = $e->getContents();
         $url = $e->url();
         $url->setQuery([]);
         $page = new Page($url, $content);
@@ -112,11 +112,7 @@ class PageProvider
 
     public function onPageFile_htm(PageFileEvent $e)
     {
-        $content = file_get_contents($e->path());
-        $url = $e->url();
-        $url->setQuery([]);
-        $page = new Page($url, $content);
-        return $page;
+        return $this->onPageFile_html($e);
     }
 
     public function error(URL $url, int $code, int $originalCode = null): ?PageInterface
