@@ -205,11 +205,11 @@ class DOMProvider
         $node = $event->getNode();
         if (preg_match('/^@beginContext:(.+)$/', trim($node->data), $matches)) {
             URLFactory::beginContext(new URL(trim($matches[1])));
-            $event->setDelete(true);
+            // $event->setDelete(true);
         }
         if (trim($node->data) == '@endContext') {
             URLFactory::endContext();
-            $event->setDelete(true);
+            // $event->setDelete(true);
         }
     }
 

@@ -14,6 +14,9 @@ class ImageProvider
     const OUTPUT_FORMATS = [
         'jpg', 'gif', 'png', 'wbmp', 'xbm', 'webp', 'bmp', 'ico',
     ];
+    const INPUT_FORMATS = [
+        'jpg', 'jpeg', 'gif', 'png', 'wbmp', 'xbm', 'webp', 'bmp',
+    ];
 
     private $leafcutter;
     private $saveOptions = [
@@ -61,8 +64,10 @@ class ImageProvider
         $url = new URL($search);
         foreach ($this->leafcutter->content()->files($url->sitePath(), $namespace ?? $url->siteNamespace()) as $file) {
             $url = $file->url();
-            $url->setQuery($query);
-            $images["$url"] = $this->get($url);
+            if (in_array(strtolower($url->extensions()), static::INPUT_FORMATS)) {
+                $url->setQuery($query);
+                $images["$url"] = $this->get($url);
+            }
         }
         $images = array_filter($images);
         return new Gallery($images);
@@ -135,7 +140,6 @@ class ImageProvider
             $ico_lib->save_ico($temp);
             \unlink($temp_png);
         }
-
         // move temp file to final destination
         $fs->move($temp, $dest, true);
     }
