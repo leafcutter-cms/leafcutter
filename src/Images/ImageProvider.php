@@ -64,7 +64,7 @@ class ImageProvider
         $url = new URL($search);
         foreach ($this->leafcutter->content()->files($url->sitePath(), $namespace ?? $url->siteNamespace()) as $file) {
             $url = $file->url();
-            if (in_array(strtolower($url->extensions()), static::INPUT_FORMATS)) {
+            if (in_array(strtolower($url->extension()), static::INPUT_FORMATS)) {
                 $url->setQuery($query);
                 $images["$url"] = $this->get($url);
             }
