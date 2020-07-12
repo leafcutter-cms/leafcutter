@@ -133,11 +133,15 @@ class Page implements PageInterface
     {
         if (is_string($content)) {
             $event = new PageContentEvent($this, $content);
-            Leafcutter::get()->events()->dispatchAll(
+            Leafcutter::get()->events()->dispatchEvent(
+                'onPageRawContent',
+                $event
+            );
+            Leafcutter::get()->events()->dispatchEvent(
                 'onPageContentString',
                 $event
             );
-            Leafcutter::get()->events()->dispatchAll(
+            Leafcutter::get()->events()->dispatchEvent(
                 'onPageContentHTML',
                 $event
             );

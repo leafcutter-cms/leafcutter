@@ -20,4 +20,14 @@ class Gallery extends Collection
         $out .= PHP_EOL . '</div>';
         return $out;
     }
+
+    public function setThumbnail(string $thumbnail)
+    {
+        $this->thumbnail = $thumbnail;
+    }
+
+    public function setFull(string $full)
+    {
+        $this->full = $full;
+    }
 }
