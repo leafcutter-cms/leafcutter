@@ -83,7 +83,7 @@ class Leafcutter
                 $response->setStatus(404);
             }
             if ($page) {
-                $response->setContent($page->content());
+                $response->setContent($page->generateContent());
             } else {
                 $response->setStatus(404);
                 $response->setContent('<!doctype html><html><body><h1>404 not found</h1><p>Additionally, no error page could be located.</p></body></html>');
