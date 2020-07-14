@@ -40,6 +40,16 @@ class Collection implements \Iterator, \Countable
         $this->sorted = false;
     }
 
+    public function remove($item): void
+    {
+        $this->items = array_filter(
+            $this->items,
+            function($e)use($item) {
+                return $e != $item;
+            }
+        );
+    }
+
     public function resetSort(): Collection
     {
         $this->sortBy = [];

@@ -69,7 +69,9 @@ class PageProvider
     public function children(URL $url): Collection
     {
         $search = preg_replace('@[^\/]+$@', '', $url->siteFullPath()) . '*';
-        return $this->search($search, $url->siteNamespace());
+        $result = $this->search($search, $url->siteNamespace());
+        $result->remove($this->get($url));
+        return $result;
     }
 
     public function search(string $glob, string $namespace = null): Collection
