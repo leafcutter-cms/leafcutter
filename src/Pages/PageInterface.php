@@ -6,12 +6,13 @@ use Leafcutter\URL;
 
 interface PageInterface
 {
-    public function __construct(URL $url, string $content);
+    public function __construct(URL $url);
     public function url(): URL;
-    public function calledURL(): URL;
+    public function calledUrl(): URL;
     public function setUrl(URL $url);
-    public function content(): string;
-    public function setContent($content);
+    public function rawContent(): string;
+    public function generateContent(): string;
+    public function setRawContent(string $content);
     public function hash(): string;
     public function children(): Collection;
     public function parent(): ?PageInterface;

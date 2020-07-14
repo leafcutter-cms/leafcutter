@@ -4,7 +4,7 @@ cache:
     content: 60
     output: 60
     assets: 3600
-  driver: filesystem
+  driver: ephemeral
   driver_filesystem_config:
     encoder: Native
     path: ${cache.directory}CacheProvider

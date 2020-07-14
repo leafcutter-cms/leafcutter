@@ -6,35 +6,27 @@ use Leafcutter\Common\Collection;
 use Leafcutter\Leafcutter;
 use Leafcutter\URL;
 use Leafcutter\URLFactory;
-use Symfony\Component\Yaml\Yaml;
 
 class Page implements PageInterface
 {
-    protected $content, $url, $meta;
+    protected $rawContent = 'No content';
+    protected $rawContentType, $generatedContent, $url, $meta;
     protected $dynamic = false;
     protected $template = 'default.twig';
     protected $parent;
 
-    public function __construct(URL $url, string $content)
+    public function __construct(URL $url)
     {
         // normalize trailing slashes/.html
         if ($url->path() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $url->path())) {
             $url->setPath($url->path() . '/');
         }
         $this->url = $url;
-        $this->calledURL = $url;
+        $this->calledUrl = $url;
         $this->meta = new SelfReferencingFlatArray([
             'date.generated' => time(),
             'unlisted' => false,
         ]);
-        $this->setContent($content);
-    }
-
-    public function __sleep()
-    {
-        // ensure that callback has been resolved before serializing
-        $this->content();
-        return array_keys(get_object_vars($this));
     }
 
     public function dynamic(): bool
@@ -47,7 +39,7 @@ class Page implements PageInterface
         $this->dynamic = $dynamic;
     }
 
-    public function template(): ?string
+    public function template(): string
     {
         return $this->template;
     }
@@ -65,9 +57,6 @@ class Page implements PageInterface
         if ($this->meta('title')) {
             return $this->meta('title');
         }
-        if (preg_match('@<h1>(.+?)</h1>@im', $this->content(), $matches)) {
-            return trim($matches[1]);
-        }
         return 'Unnamed page';
     }
 
@@ -79,9 +68,6 @@ class Page implements PageInterface
         if ($this->meta('name')) {
             return $this->meta('name');
         }
-        if (preg_match('@<h1>(.+?)</h1>@im', $this->content(), $matches)) {
-            return trim($matches[1]);
-        }
         return 'Untitled page';
     }
 
@@ -90,9 +76,7 @@ class Page implements PageInterface
         if ($value !== null) {
             $this->meta[$key] = $value;
             if (substr($key, 0, 5) == 'date.') {
-                foreach ($this->meta['date'] as $k => $v) {
-                    $this->meta["date.$k"] = intval($v) ?? strtotime($v);
-                }
+                $this->parseDatesInMeta();
             }
         }
         return $this->meta[$key];
@@ -101,6 +85,14 @@ class Page implements PageInterface
     public function metaMerge(array $meta, $overwrite = false)
     {
         $this->meta->merge($meta, null, $overwrite);
+        $this->parseDatesInMeta();
+    }
+
+    protected function parseDatesInMeta()
+    {
+        foreach ($this->meta['date'] as $k => $v) {
+            $this->meta["date.$k"] = intval($v) ?? strtotime($v);
+        }
     }
 
     public function url(): URL
@@ -108,9 +100,9 @@ class Page implements PageInterface
         return clone $this->url;
     }
 
-    public function calledURL(): URL
+    public function calledUrl(): URL
     {
-        return clone $this->calledURL;
+        return clone $this->calledUrl;
     }
 
     public function setUrl(URL $url)
@@ -118,37 +110,79 @@ class Page implements PageInterface
         $this->url = clone $url;
     }
 
-    public function content($wrap = true): string
+    public function setRawContent(string $content, string $type = null)
     {
-        if (is_callable($this->content)) {
-            $this->setContent(($this->content)());
-        }
-        if ($wrap) {
-            return '<!--@beginContext:' . $this->calledURL() . '-->' . $this->content . '<!--@endContext-->';
-        }
-        return $this->content;
-    }
-
-    public function setContent($content)
-    {
-        if (is_string($content)) {
-            $event = new PageContentEvent($this, $content);
+        $event = new PageContentEvent($this, $content);
+        Leafcutter::get()->events()->dispatchEvent(
+            'onPageSetRawContent',
+            $event
+        );
+        if ($type) {
             Leafcutter::get()->events()->dispatchEvent(
-                'onPageContent',
+                'onPageSetRawContent_' . $type,
                 $event
             );
-            if (!$this->meta['name'] && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
-                $this->meta['name'] = trim(strip_tags($matches[1]));
-            }
-            $content = $event->content();
         }
-        $this->content = $content;
+        $this->rawContent = $event->content();
+        $this->rawContentType = $type;
+        $this->generatedContent = null;
+    }
+
+    public function rawContent(): string
+    {
+        return $this->rawContent;
+    }
+
+    protected function rawContentForGeneration(): string
+    {
+        return $this->rawContent();
+    }
+
+    public function generateContent(): string
+    {
+        if ($this->generatedContent === null) {
+            URLFactory::beginContext($this->calledUrl());
+            $event = new PageContentEvent($this, $this->rawContentForGeneration());
+            Leafcutter::get()->events()->dispatchEvent(
+                'onPageGenerateContent_raw',
+                $event
+            );
+            if ($this->rawContentType) {
+                Leafcutter::get()->events()->dispatchEvent(
+                    'onPageGenerateContent_raw_' . $this->rawContentType,
+                    $event
+                );
+            }
+            Leafcutter::get()->events()->dispatchEvent(
+                'onPageGenerateContent_build',
+                $event
+            );
+            if ($this->rawContentType) {
+                Leafcutter::get()->events()->dispatchEvent(
+                    'onPageGenerateContent_build_' . $this->rawContentType,
+                    $event
+                );
+            }
+            Leafcutter::get()->events()->dispatchEvent(
+                'onPageGenerateContent_finalize',
+                $event
+            );
+            if ($this->rawContentType) {
+                Leafcutter::get()->events()->dispatchEvent(
+                    'onPageGenerateContent_finalize_' . $this->rawContentType,
+                    $event
+                );
+            }
+            $this->generatedContent = $event->content();
+            URLFactory::endContext();
+        }
+        return $this->generatedContent;
     }
 
     public function hash(): string
     {
         return hash('md5', serialize([
-            $this->content(), $this->url(),
+            $this->rawContent(), $this->url(),
         ]));
     }
 
@@ -182,7 +216,7 @@ class Page implements PageInterface
         if ($parent instanceof PageInterface) {
             $this->parent = $parent;
         } elseif (is_string($parent)) {
-            URLFactory::beginContext($this->calledURL());
+            URLFactory::beginContext($this->calledUrl());
             $this->parent = Leafcutter::get()->pages()->get(new URL($parent));
             URLFactory::endContext();
         }

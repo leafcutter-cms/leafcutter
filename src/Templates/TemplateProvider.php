@@ -2,6 +2,7 @@
 namespace Leafcutter\Templates;
 
 use Leafcutter\Leafcutter;
+use Leafcutter\Pages\PageContentEvent;
 use Leafcutter\Pages\PageEvent;
 use Leafcutter\Response;
 use Leafcutter\URLFactory;
@@ -70,23 +71,19 @@ class TemplateProvider
         $this->twig = null;
     }
 
-    public function onPageReady(PageEvent $event)
+    public function onPageGenerateContent_raw(PageContentEvent $event)
     {
         $page = $event->page();
-        $content = $page->content(false);
-        $name = 'page_' . $page->hash();
-        $page->setContent(function () use ($name, $page, $content) {
-            URLFactory::beginContext($page->calledURL());
-            $this->addOverride($name, $content);
-            $content = $this->apply(
-                $name,
-                [
-                    'page' => $page,
-                ]
-            );
-            URLFactory::endContext();
-            return $content;
-        });
+        $content = $event->content(false);
+        $name = 'onPageGenerateContent_'.$page->hash();
+        $this->addOverride($name, $content);
+        $content = $this->apply(
+            $name,
+            [
+                'page' => $page,
+            ]
+        );
+        $event->setContent($content);
     }
 
     protected function sourceDirectoriesChanged()

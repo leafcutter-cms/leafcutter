@@ -19,24 +19,27 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
-    public function onPageContent(PageContentEvent $event)
+    public function onPageSetRawContent(PageContentEvent $event)
     {
-        $content = $event->content();
         $page = $event->page();
+        // try to parse out any @meta comments
         $content = preg_replace_callback('/<!--@meta(.+?)-->/ms', function ($match) use ($page) {
             try {
                 $meta = Yaml::parse($match[1]);
                 $page->metaMerge($meta);
             } catch (\Throwable $th) {
-                Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledURL());
-                // throw $th;
+                Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledUrl());
             }
             return '';
-        }, $content);
-        $event->setContent($content);
-        if (!$page->meta('name') && preg_match('@<h1>(.+?)</h1>@', $content, $matches)) {
+        }, $event->content());
+        // try to identify something like an HTML header tag
+        if (!$page->meta('name') && preg_match('@^<h1>(.+?)</h1>$@m', $content, $matches)) {
             $page->meta('name', trim(strip_tags($matches[1])));
         }
+        if (!$page->meta('name') && preg_match('@^#(.+)$@m', $content, $matches)) {
+            $page->meta('name', trim(strip_tags($matches[1])));
+        }
+        $event->setContent($content);
     }
 
     public function parent(URL $url): ?PageInterface
@@ -93,26 +96,33 @@ class PageProvider
 
     public function onPageFile_md(PageFileEvent $e)
     {
-        $content = $e->getContents();
-        $content = $this->markdown()->text($content);
-        $url = $e->url();
-        $url->setQuery([]);
-        $page = new Page($url, $content);
-        return $page;
+        return $this->handle_onPageFile($e, 'md');
+    }
+
+    public function onPageGenerateContent_build_md(PageContentEvent $e)
+    {
+        $e->setContent(
+            $this->markdown()->text($e->content())
+        );
     }
 
     public function onPageFile_html(PageFileEvent $e)
     {
-        $content = $e->getContents();
-        $url = $e->url();
-        $url->setQuery([]);
-        $page = new Page($url, $content);
-        return $page;
+        return $this->handle_onPageFile($e, 'html');
     }
 
     public function onPageFile_htm(PageFileEvent $e)
     {
-        return $this->onPageFile_html($e);
+        return $this->handle_onPageFile($e, 'html');
+    }
+
+    protected function handle_onPageFile(PageFileEvent $e, string $type = null)
+    {
+        $url = $e->url();
+        $url->setQuery([]);
+        $page = new Page($url);
+        $page->setRawContent($e->getContents(), $type);
+        return $page;
     }
 
     public function error(URL $url, int $code, int $originalCode = null): ?PageInterface

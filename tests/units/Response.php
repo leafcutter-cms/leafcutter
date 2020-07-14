@@ -92,7 +92,7 @@ class Response extends atoum\test
     {
         $this->given($this->newTestedInstance)
             ->given($url = new \mock\Leafcutter\URL('https://www.google.com/'))
-            ->given($page = new \mock\Leafcutter\Pages\PageInterface($url, 'page content'))
+            ->given($page = new \mock\Leafcutter\Pages\PageInterface($url))
                 ->given($this->calling($page)->url = $url)
             ->given($this->testedInstance->setSource($page))
                 ->object($this->testedInstance->page())->isEqualTo($page)
