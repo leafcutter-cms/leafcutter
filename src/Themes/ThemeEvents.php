@@ -194,7 +194,7 @@ class ThemeEvents
             $this->leafcutter->theme()->activate($name);
         }
         // specific css/js from page meta
-        URLFactory::beginContext($page->calledURL());
+        URLFactory::beginContext($page->calledUrl());
         foreach ($page->meta('page_js') ?? [] as $url) {
             $url = new URL($url);
             $this->leafcutter->theme()->addJs('page_js_' . md5($url), $url, 'page');

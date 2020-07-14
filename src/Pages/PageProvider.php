@@ -28,7 +28,7 @@ class PageProvider
                 $meta = Yaml::parse($match[1]);
                 $page->metaMerge($meta);
             } catch (\Throwable $th) {
-                Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledURL());
+                Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledUrl());
             }
             return '';
         }, $event->content());

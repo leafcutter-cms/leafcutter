@@ -8,7 +8,7 @@ interface PageInterface
 {
     public function __construct(URL $url);
     public function url(): URL;
-    public function calledURL(): URL;
+    public function calledUrl(): URL;
     public function setUrl(URL $url);
     public function rawContent(): string;
     public function generateContent(): string;

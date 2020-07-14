@@ -9,7 +9,8 @@ use Leafcutter\URLFactory;
 
 class Page implements PageInterface
 {
-    protected $rawContent, $rawContentType, $generatedContent, $url, $meta;
+    protected $rawContent = 'No content';
+    protected $rawContentType, $generatedContent, $url, $meta;
     protected $dynamic = false;
     protected $template = 'default.twig';
     protected $parent;
@@ -21,7 +22,7 @@ class Page implements PageInterface
             $url->setPath($url->path() . '/');
         }
         $this->url = $url;
-        $this->calledURL = $url;
+        $this->calledUrl = $url;
         $this->meta = new SelfReferencingFlatArray([
             'date.generated' => time(),
             'unlisted' => false,
@@ -38,7 +39,7 @@ class Page implements PageInterface
         $this->dynamic = $dynamic;
     }
 
-    public function template(): ?string
+    public function template(): string
     {
         return $this->template;
     }
@@ -75,9 +76,7 @@ class Page implements PageInterface
         if ($value !== null) {
             $this->meta[$key] = $value;
             if (substr($key, 0, 5) == 'date.') {
-                foreach ($this->meta['date'] as $k => $v) {
-                    $this->meta["date.$k"] = intval($v) ?? strtotime($v);
-                }
+                $this->parseDatesInMeta();
             }
         }
         return $this->meta[$key];
@@ -86,6 +85,14 @@ class Page implements PageInterface
     public function metaMerge(array $meta, $overwrite = false)
     {
         $this->meta->merge($meta, null, $overwrite);
+        $this->parseDatesInMeta();
+    }
+
+    protected function parseDatesInMeta()
+    {
+        foreach ($this->meta['date'] as $k => $v) {
+            $this->meta["date.$k"] = intval($v) ?? strtotime($v);
+        }
     }
 
     public function url(): URL
@@ -93,9 +100,9 @@ class Page implements PageInterface
         return clone $this->url;
     }
 
-    public function calledURL(): URL
+    public function calledUrl(): URL
     {
-        return clone $this->calledURL;
+        return clone $this->calledUrl;
     }
 
     public function setUrl(URL $url)
@@ -134,7 +141,7 @@ class Page implements PageInterface
     public function generateContent(): string
     {
         if ($this->generatedContent === null) {
-            URLFactory::beginContext($this->calledURL());
+            URLFactory::beginContext($this->calledUrl());
             $event = new PageContentEvent($this, $this->rawContentForGeneration());
             Leafcutter::get()->events()->dispatchEvent(
                 'onPageGenerateContent_raw',
@@ -209,7 +216,7 @@ class Page implements PageInterface
         if ($parent instanceof PageInterface) {
             $this->parent = $parent;
         } elseif (is_string($parent)) {
-            URLFactory::beginContext($this->calledURL());
+            URLFactory::beginContext($this->calledUrl());
             $this->parent = Leafcutter::get()->pages()->get(new URL($parent));
             URLFactory::endContext();
         }
