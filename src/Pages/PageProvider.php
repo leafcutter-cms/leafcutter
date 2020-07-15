@@ -40,7 +40,7 @@ class PageProvider
             return $match[0];
         }, $event->content());
         // try to identify something like an HTML header tag
-        if (!$page->meta('title') && preg_match('@^<h1>(.+?)</h1>$@m', $content, $matches)) {
+        if (!$page->meta('title') && preg_match('@<h1>(.+?)</h1>@m', $content, $matches)) {
             $page->meta('title', trim(strip_tags($matches[1])));
         }
         if (!$page->meta('title') && preg_match('@^#(.+)$@m', $content, $matches)) {
