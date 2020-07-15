@@ -3,6 +3,7 @@ namespace Leafcutter\DOM;
 
 use Leafcutter\Assets\ImageInterface;
 use Leafcutter\Leafcutter;
+use Leafcutter\Pages\PageContentEvent;
 use Leafcutter\Response;
 use Leafcutter\URL;
 use Leafcutter\URLFactory;
@@ -15,6 +16,40 @@ class DOMProvider
     {
         $this->leafcutter = $leafcutter;
         $this->leafcutter->events()->addSubscriber($this);
+    }
+
+    /**
+     * This class hooks into the main control flow at the onResponseReady event,
+     * which runs as the very last step before outputting HTML responses to the browser.
+     *
+     * @param Response $response
+     * @return void
+     */
+    public function onResponseReady(Response $response)
+    {
+        if (substr($response->content(), 0, 9) != '<!doctype') {
+            return;
+        }
+        $response->setContent(
+            $this->html($response->content())
+        );
+    }
+
+    /**
+     * Also hook into the finalization step of Page content generation, so that
+     * links and such in page content can be handled in the correct context,
+     * even if the content is going to be embedded in some other context.
+     *
+     * @param PageContentEvent $event
+     * @return void
+     */
+    public function onPageGenerateContent_finalize(PageContentEvent $event)
+    {
+        URLFactory::beginContext($event->page()->calledUrl());
+        $event->setContent(
+            $this->html($event->content())
+        );
+        URLFactory::endContext();
     }
 
     /**
@@ -82,23 +117,6 @@ class DOMProvider
         if (!$a->getAttribute('title')) {
             $a->setAttribute('title', $page->title());
         }
-    }
-
-    /**
-     * This class hooks into the main control flow at the onResponseReady event,
-     * which runs as the very last step before outputting HTML responses to the browser.
-     *
-     * @param Response $response
-     * @return void
-     */
-    public function onResponseReady(Response $response)
-    {
-        if (substr($response->content(), 0, 9) != '<!doctype') {
-            return;
-        }
-        $response->setContent(
-            $this->html($response->content())
-        );
     }
 
     /**
