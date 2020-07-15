@@ -19,6 +19,13 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
+    public function onPageGenerateContent_finalize(PageContentEvent $event)
+    {
+        $event->setContent(
+            preg_replace('/<!--@meta.+?-->/ms', '', $event->content())
+        );
+    }
+
     public function onPageSetRawContent(PageContentEvent $event)
     {
         $page = $event->page();
@@ -30,15 +37,20 @@ class PageProvider
             } catch (\Throwable $th) {
                 Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledUrl());
             }
-            return '';
+            return $match[0];
         }, $event->content());
         // try to identify something like an HTML header tag
-        if (!$page->meta('name') && preg_match('@^<h1>(.+?)</h1>$@m', $content, $matches)) {
-            $page->meta('name', trim(strip_tags($matches[1])));
+        if (!$page->meta('title') && preg_match('@<h1>(.+?)</h1>@m', $content, $matches)) {
+            $page->meta('title', trim(strip_tags($matches[1])));
         }
-        if (!$page->meta('name') && preg_match('@^#(.+)$@m', $content, $matches)) {
-            $page->meta('name', trim(strip_tags($matches[1])));
+        if (!$page->meta('title') && preg_match('@^#(.+)$@m', $content, $matches)) {
+            $page->meta('title', trim(strip_tags($matches[1])));
         }
+        // make home page named "Home" by default
+        if (!$page->meta('name') && $page->url()->siteFullPath() == '') {
+            $page->meta('name', 'Home');
+        }
+        // set content
         $event->setContent($content);
     }
 
