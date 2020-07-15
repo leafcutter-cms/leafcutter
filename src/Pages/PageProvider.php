@@ -19,6 +19,13 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
+    public function onPageGenerateContent_finalize(PageContentEvent $event)
+    {
+        $event->setContent(
+            preg_replace('/<!--@meta.+?-->/ms', '', $event->content())
+        );
+    }
+
     public function onPageSetRawContent(PageContentEvent $event)
     {
         $page = $event->page();
@@ -30,7 +37,7 @@ class PageProvider
             } catch (\Throwable $th) {
                 Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledUrl());
             }
-            return '';
+            return $match[0];
         }, $event->content());
         // try to identify something like an HTML header tag
         if (!$page->meta('name') && preg_match('@^<h1>(.+?)</h1>$@m', $content, $matches)) {
