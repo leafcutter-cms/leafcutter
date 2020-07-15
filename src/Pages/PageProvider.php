@@ -26,7 +26,7 @@ class PageProvider
         $content = preg_replace_callback('/<!--@meta(.+?)-->/ms', function ($match) use ($page) {
             try {
                 $meta = Yaml::parse($match[1]);
-                $page->metaMerge($meta);
+                $page->metaMerge($meta, true);
             } catch (\Throwable $th) {
                 Leafcutter::get()->logger()->error('Failed to parse meta yaml content for ' . $page->calledUrl());
             }
