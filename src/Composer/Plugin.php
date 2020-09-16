@@ -48,7 +48,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return array(
-            'post-update-cmd' => 'findThemesAndAddons',
+            'post-autoload-dump' => 'findThemesAndAddons'
         );
     }
 
