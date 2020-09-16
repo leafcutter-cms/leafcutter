@@ -3,9 +3,9 @@ namespace Leafcutter\Templates;
 
 use Leafcutter\Leafcutter;
 use Leafcutter\Pages\PageContentEvent;
-use Leafcutter\Pages\PageEvent;
+
 use Leafcutter\Response;
-use Leafcutter\URLFactory;
+
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
@@ -74,8 +74,13 @@ class TemplateProvider
     public function onPageGenerateContent_raw(PageContentEvent $event)
     {
         $page = $event->page();
+        // skip if page meta 'use_twig' is false
+        if ($page->meta('use_twig') === false) {
+            return;
+        }
+        // run page content through twig
         $content = $event->content(false);
-        $name = 'onPageGenerateContent_'.$page->hash();
+        $name = 'onPageGenerateContent_' . $page->hash();
         $this->addOverride($name, $content);
         $content = $this->apply(
             $name,
