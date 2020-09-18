@@ -15,7 +15,11 @@
 <div id="main-wrapper">
 {% block header %}{% include "blocks/header.twig" %}{% endblock %}
 {% block navigation %}{% include "blocks/navigation.twig" %}{% endblock %}
+<main id="main-content">
+<article>
 {% block main %}{% include "blocks/main.twig" %}{% endblock %}
+</article>
+</main>
 {% block footer %}{% include "blocks/footer.twig" %}{% endblock %}
 </div>
 {{ templates.html_injection('body_end')|raw }}

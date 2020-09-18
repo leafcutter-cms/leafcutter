@@ -77,6 +77,8 @@ trait SourceDirectoriesTrait
             $this->sourceDirectoryHash = null;
             $this->compiledSourceDirectories = null;
             $this->sourceDirectoriesChanged();
+        } else {
+            user_error('addPrimaryDirectory: ' . $dir . ' is not a directory', E_USER_WARNING);
         }
     }
 
@@ -99,6 +101,8 @@ trait SourceDirectoriesTrait
             //clear cached things
             $this->sourceDirectoryHash = null;
             $this->compiledSourceDirectories = null;
+        } else {
+            user_error('addDirectory: ' . $dir . ' is not a directory', E_USER_WARNING);
         }
     }
 

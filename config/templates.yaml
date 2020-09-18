@@ -1,4 +1,7 @@
 templates:
+  default_template: default.twig
+  directories: []
+  primary_directory: null
   twig_environment:
     cache: false
   site:

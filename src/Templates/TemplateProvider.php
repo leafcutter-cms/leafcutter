@@ -40,9 +40,29 @@ class TemplateProvider
         return $out;
     }
 
+    /**
+     * Use own events to set up leafcutter-specific tools in Twig
+     *
+     * @param TemplateProvider $provider
+     * @return void
+     */
     public function onTemplateProviderReady(TemplateProvider $provider)
     {
-        // link filter
+        // provide separate, configurable filters for date and datetime
+        $provider->addFilter(
+            'date',
+            function ($item) {
+                return date($this->leafcutter->config('theme.date_format'), $item);
+            }
+        );
+        $provider->addFilter(
+            'datetime',
+            function ($item) {
+                return date($this->leafcutter->config('theme.datetime_format'), $item);
+            }
+        );
+        // set template directories from config
+        // page/asset link filter
         $provider->addFilter(
             'link',
             function ($item) {
@@ -62,6 +82,27 @@ class TemplateProvider
             },
             ['is_safe' => ['html']]
         );
+    }
+
+    /**
+     * As a final step after Leafcutter is constructed, add directories from 
+     * configuration, so that sites can change template directories via config.
+     *
+     * @param Leafcutter $leafcutter
+     * @return void
+     */
+    public function onLeafcutterConstructed(Leafcutter $leafcutter)
+    {
+        // add regular directories from config
+        foreach ($leafcutter->config('templates.directories') as $dir) {
+            $leafcutter->templates()->addDirectory($dir);
+        }
+        // add primary directory from config
+        if ($leafcutter->config('templates.primary_directory')) {
+            $leafcutter->templates()->addPrimaryDirectory(
+                $leafcutter->config('templates.primary_directory')
+            );
+        }
     }
 
     public function addFilter(string $name, ?callable $fn, array $options = [])
@@ -110,7 +151,7 @@ class TemplateProvider
     {
         $template = $response->template();
         if (!$template) {
-            return;
+            $template = $this->leafcutter->config('templates.default_template');
         }
         $content = $response->content();
         $response->setContent($this->apply(

@@ -60,7 +60,7 @@ class Response
         $this->dynamic = $dynamic;
     }
 
-    public function template(): string
+    public function template(): ?string
     {
         return $this->template;
     }

@@ -12,7 +12,6 @@ class Page implements PageInterface
     protected $rawContent = 'No content';
     protected $rawContentType, $generatedContent, $url, $meta;
     protected $dynamic = false;
-    protected $template = 'default.twig';
     protected $parent;
 
     public function __construct(URL $url)
@@ -39,14 +38,14 @@ class Page implements PageInterface
         $this->dynamic = $dynamic;
     }
 
-    public function template(): string
+    public function template(): ?string
     {
-        return $this->template;
+        return $this->meta('template');
     }
 
     public function setTemplate(?string $template)
     {
-        $this->template = $template;
+        $this->meta('template', $template);
     }
 
     public function name(): string
@@ -91,7 +90,7 @@ class Page implements PageInterface
     protected function parseDatesInMeta()
     {
         foreach ($this->meta['date'] as $k => $v) {
-            $this->meta["date.$k"] = intval($v) ?? strtotime($v);
+            $this->meta["date.$k"] = is_int($v) ? intval($v) : strtotime($v);
         }
     }
 

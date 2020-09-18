@@ -1,6 +1,8 @@
 encoding: utf-8
 
 theme:
+  date_format: "F j, Y"
+  datetime_format: "F j, Y, g:i a T"
   activate: []
   css:
     bundle: false
