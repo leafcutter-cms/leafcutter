@@ -2,14 +2,18 @@
 <html class="{{theme.getHTMLClass}} {% block htmlclass %}{% endblock %}">
 <head>
 
+{% include "inserts/html_head_start.twig" %}
 {{ templates.html_injection('head_start')|raw }}
 <title>{% block title %}{% include "leafcutter/html_title.twig" %}{% endblock %}</title>
 {% block head %}{% include "leafcutter/html_head.twig" %}{% endblock %}
+{% include "inserts/html_head.twig" %}
 {{ templates.html_injection('head')|raw }}
+{% include "inserts/html_head_end.twig" %}
 {{ templates.html_injection('head_end')|raw }}
 
 </head>
 <body class="{{theme.getBodyClass}} {% block bodyclass %}{% endblock %}">
+{% include "inserts/html_body_start.twig" %}
 
 {{ templates.html_injection('body_start')|raw }}
 <div id="main-wrapper">
@@ -24,5 +28,6 @@
 </div>
 {{ templates.html_injection('body_end')|raw }}
 
+{% include "inserts/html_body_end.twig" %}
 </body>
 </html>
