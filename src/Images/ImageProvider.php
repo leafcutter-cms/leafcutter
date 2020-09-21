@@ -79,7 +79,7 @@ class ImageProvider
         $namespace = $url->siteNamespace();
         $file = $this->leafcutter->content()->files($path, $namespace);
         if ($file) {
-            return new Image($url, $this->leafcutter);
+            return new Image($url, reset($file)->path(), $this->leafcutter);
         } else {
             return null;
         }

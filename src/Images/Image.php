@@ -7,19 +7,43 @@ use Leafcutter\URL;
 class Image
 {
     protected $url;
+    protected $file;
     protected $thumb = null;
     protected $leafcutter;
+    protected $meta = ['date' => []];
 
-    public function __construct(url $url, Leafcutter $leafcutter)
+    public function __construct(URL $url, string $file, Leafcutter $leafcutter)
     {
+        if (!file_exists($file)) {
+            throw new \Exception("Error creating Image from non-existent file: " . $file, 1);
+        }
         $this->url = $url;
+        $this->file = $file;
         $this->leafcutter = $leafcutter;
+        // extract some metadata from file
+        $this->meta('date.modified', filemtime($this->file));
     }
 
     public function __toString()
     {
         $string = $this->default()->__toString();
         return $string;
+    }
+
+    public function meta(string $key, $value = null)
+    {
+        if ($value !== null) {
+            $this->meta[$key] = $value;
+            $this->parseDatesInMeta();
+        }
+        return @$this->meta[$key];
+    }
+
+    protected function parseDatesInMeta()
+    {
+        foreach ($this->meta['date'] as $k => $v) {
+            $this->meta["date.$k"] = is_int($v) ? intval($v) : strtotime($v);
+        }
     }
 
     public function name()

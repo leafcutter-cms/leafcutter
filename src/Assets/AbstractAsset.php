@@ -21,13 +21,16 @@ abstract class AbstractAsset implements AssetInterface
     {
         if ($value !== null) {
             $this->meta[$key] = $value;
-            if (substr($key, 0, 5) == 'date.') {
-                foreach ($this->meta['date'] as $k => $v) {
-                    $this->meta["date.$k"] = intval($v) ?? strtotime($v);
-                }
-            }
+            $this->parseDatesInMeta();
         }
-        return $this->meta[$key];
+        return @$this->meta[$key];
+    }
+
+    protected function parseDatesInMeta()
+    {
+        foreach ($this->meta['date'] as $k => $v) {
+            $this->meta["date.$k"] = is_int($v) ? intval($v) : strtotime($v);
+        }
     }
 
     public function setFilename(string $filename)
