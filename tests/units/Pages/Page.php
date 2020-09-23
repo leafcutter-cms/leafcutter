@@ -17,7 +17,7 @@ class Page extends atoum\test
             ->boolean($this->testedInstance->dynamic())->isFalse()
             ->given($this->testedInstance->setDynamic(true))
                 ->boolean($this->testedInstance->dynamic())->isTrue
-            ->string($this->testedInstance->template())->isEqualTo('default.twig')
+                ->variable($this->testedInstance->template())->isNull()
             ->given($this->testedInstance->setTemplate('foo.twig'))
                 ->string($this->testedInstance->template())->isEqualTo('foo.twig')
             ->given($this->testedInstance->setUrl(new URL('https://www.google.com/foo/baz/')))
@@ -38,7 +38,8 @@ class Page extends atoum\test
             ->string($page->rawContent())
                 ->isEqualTo('No content')
             ->string($page->generateContent())
-                ->isEqualTo('No content')
+                ->contains('<html>')
+                ->contains('No content')
             ->given($page->setRawContent("# Markdown\n\nPage content", 'md'))
                 ->string($page->rawContent())
                     ->isEqualTo("# Markdown\n\nPage content")
