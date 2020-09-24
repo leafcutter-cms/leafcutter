@@ -1,18 +1,15 @@
 site:
   url: 'http://local.test/leafcutter/demo/'
 
+directories:
+  web: ${directories.base}
+
 templates:
   site:
     name: Demo Leafcutter site
 
 cache:
   driver: ephemeral
-  directory: '${base_dir}/cache/'
-
-assets:
-  output:
-    directory: '${base_dir}/assets/'
-    url: '@/assets/'
 
 theme:
   css:

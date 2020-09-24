@@ -1,0 +1,7 @@
+directories:
+  base: null # By default all the directories are relative to the project dir
+  cache: ${directories.base}/cache
+  web: ${directories.base}/web
+  assets: ${directories.web}/assets
+  storage: ${directories.base}/storage
+  templates: ${directories.base}/templates

@@ -85,7 +85,7 @@ class TemplateProvider
     }
 
     /**
-     * As a final step after Leafcutter is constructed, add directories from 
+     * As a final step after Leafcutter is constructed, add directories from
      * configuration, so that sites can change template directories via config.
      *
      * @param Leafcutter $leafcutter
@@ -98,7 +98,7 @@ class TemplateProvider
             $leafcutter->templates()->addDirectory($dir);
         }
         // add primary directory from config
-        if ($leafcutter->config('templates.primary_directory')) {
+        if ($leafcutter->config('templates.primary_directory') && is_dir($leafcutter->config('templates.primary_directory'))) {
             $leafcutter->templates()->addPrimaryDirectory(
                 $leafcutter->config('templates.primary_directory')
             );

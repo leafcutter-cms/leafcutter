@@ -137,7 +137,7 @@ class AssetProvider
 
     protected function hashPath(AssetInterface $asset): string
     {
-        $path = preg_replace("/^(.{1})(.{2})(.{2})/", "$1/$2/$3/", $asset->hash()) . '/';
+        $path = '/'.preg_replace("/^(.{1})(.{2})(.{2})/", "$1/$2/$3/", $asset->hash()) . '/';
         return $path;
     }
 

@@ -162,7 +162,7 @@ class ImageProvider
     {
         $hash = hash_file('md5', $source);
         $hash = preg_replace("/^(.{1})(.{2})(.{2})/", "$1/$2/$3/", $hash) . '/';
-        $dest = $this->leafcutter->config('assets.output.directory') . $hash . basename($source) . '-maxresolution.png';
+        $dest = $this->leafcutter->config('assets.output.directory').'/'.$hash.basename($source).'-maxresolution.png';
         $this->generate($source, $dest, $this->normalizeQuery($dest, $this->leafcutter->config("images.presets.maxresolution")));
         return $dest;
     }

@@ -1,4 +1,7 @@
 assets:
+  output:
+    directory: ${directories.assets}
+    url: '@/assets/'
   # These extensions may also potentially be fulfilled by the specified
   # additional extenions
   equivalent_extensions:

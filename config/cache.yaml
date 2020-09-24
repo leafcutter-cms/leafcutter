@@ -1,5 +1,5 @@
 cache:
-  directory: ${base_dir}/cache/
+  directory: ${directories.cache}
   ttl:
     content: 60
     output: 60
