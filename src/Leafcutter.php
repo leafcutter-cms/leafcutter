@@ -99,9 +99,9 @@ class Leafcutter
             $response->setURL($url);
             $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url);
             if ($page && $normalizationRedirect) {
-                if (URLFactory::normalizeCurrent($page->url(), false, !$page->url()->siteNamespace())) {
+                if ($bounce = URLFactory::normalizeCurrent($page->url())) {
                     // URLFactory is requesting a URL normalization redirect, so we're done
-                    $response->redirect($page->url(), 308);
+                    $response->redirect($bounce, 308);
                     return $response;
                 }
             }

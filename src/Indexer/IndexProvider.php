@@ -30,7 +30,9 @@ class IndexProvider
 
     public function onPageGet_namespace_uid(URL $url): ?Page
     {
-        $results = $this->get('uid')->getByValue($url->sitePath());
+        $url->fixSlashes();
+        $uid = trim($url->sitePath(),'/');
+        $results = $this->get('uid')->getByValue($uid);
         $results = array_map(
             function ($i) {
                 return $this->leafcutter->pages()->get($i->url());

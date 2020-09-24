@@ -19,14 +19,14 @@ class URLFactory
      * @param URL $current
      * @param boolean $useScheme
      * @param boolean $fixSlashes
-     * @return boolean whether a redirect should be done
+     * @return string|null a string if a redirect should be done, otherwise null
      */
-    public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true): bool
+    public static function normalizeCurrent(URL $current = null, $useScheme = false, $fixSlashes = true): ?string
     {
         // get computed current URL, including fixing trailing slashes if necessary
         $current = ($current ?? static::current());
-        if ($fixSlashes && $current->path() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $current->path())) {
-            $current->setPath($current->path() . '/');
+        if ($fixSlashes) {
+            $current->fixSlashes();
         }
         $currentCmp = $current;
         // get actual current URL
@@ -37,7 +37,11 @@ class URLFactory
             $actualCmp = preg_replace('/^https?:/', ':', $actual);
         }
         // do comparison
-        return $currentCmp !== $actualCmp;
+        if ($currentCmp !== $actualCmp) {
+            return $current;
+        }else {
+            return null;
+        }
     }
 
     /**
