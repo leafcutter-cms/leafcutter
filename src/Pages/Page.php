@@ -10,9 +10,13 @@ use Leafcutter\URLFactory;
 class Page implements PageInterface
 {
     protected $rawContent = 'No content';
-    protected $rawContentType, $generatedContent, $url, $meta;
+    protected $rawContentType;
+    protected $generatedContent;
+    protected $url;
+    protected $meta;
     protected $dynamic = false;
     protected $parent;
+    protected $status = 200;
 
     public function __construct(URL $url)
     {
@@ -26,6 +30,16 @@ class Page implements PageInterface
             'date.generated' => time(),
             'unlisted' => false,
         ]);
+    }
+
+    public function status(): int
+    {
+        return $this->status;
+    }
+
+    public function setStatus(int $status)
+    {
+        $this->status = $status;
     }
 
     public function dynamic(): bool

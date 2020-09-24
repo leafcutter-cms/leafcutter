@@ -48,7 +48,9 @@ class URLFactory
     public static function currentActual(): string
     {
         $protocol = @$_SERVER['HTTPS'] === 'on' ? "https" : "http";
-        return $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $REQUEST_URI = $_SERVER['REQUEST_URI'];
+        $REQUEST_URI = str_replace('~', '%7E', $REQUEST_URI);
+        return $protocol . '://' . $_SERVER['HTTP_HOST'] . $REQUEST_URI;
     }
 
     /**
@@ -164,5 +166,4 @@ class URLFactory
         }
         return clone $current;
     }
-
 }

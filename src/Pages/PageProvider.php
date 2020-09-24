@@ -163,9 +163,11 @@ class PageProvider
         if ($page === null && $code != 999) {
             $page = $this->error($url, 999, $code);
         }
-        // if we got a page, return it
+        // if we got a page, set it up with its values and status before returning
         if ($page !== null) {
             $page->setUrl($url);
+            $page->setStatus($code);
+            $page->setDynamic(true);
         }
         return $page;
     }
@@ -191,9 +193,15 @@ class PageProvider
         }
         $this->stack[] = "$url";
         // allow URLs to be transformed
+        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
         $this->leafcutter->events()
             ->dispatchEvent('onPageURL', $url);
-        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
+        // special event names for namespaces
+        if ($url->siteNamespace()) {
+            $this->leafcutter->events()
+                ->dispatchEvent('onPageURL_namespace_' . $url->siteNamespace(), $url);
+        }
+        $this->leafcutter->logger()->debug('PageProvider: post-transform(' . $url . ')');
         // allow pages to fully bypass entire return system
         $page =
         $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ??
