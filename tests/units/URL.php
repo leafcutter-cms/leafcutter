@@ -113,7 +113,7 @@ class URL extends atoum\test
             ->string($url->__toString())->isEqualTo('https://www.google.com/foo/buzz.html');
         //set namespace
         $this->given($url->setSiteNamespace('ns'))
-            ->string($url->__toString())->isEqualTo('https://www.google.com/%40ns/foo/buzz.html');
+            ->string($url->__toString())->isEqualTo('https://www.google.com/%7Ens/foo/buzz.html');
         //set scheme/port
         $this->given($url = new LeafcutterURL('https://www.google.com/'))
             ->and($url->setScheme('http'))

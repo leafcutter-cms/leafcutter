@@ -1,5 +1,5 @@
 site:
-  url: 'http://localhost/leafcutter/demo/'
+  url: 'http://local.test/leafcutter/demo/'
 
 templates:
   site:
@@ -13,11 +13,6 @@ assets:
   output:
     directory: '${base_dir}/assets/'
     url: '@/assets/'
-
-plugins:
-  system_staticpages:
-    enabled: false
-    ttl: 30
 
 theme:
   css:

@@ -10,6 +10,9 @@ class URL
     protected $query = [];
     protected $fragment;
 
+    const NS_PREFIX = '~';
+    const NS_SUFFIX = '/';
+
     /**
      * Construct a URL from a given string. String may be relative or absolute,
      * and may include a host/protocol or not.
@@ -29,12 +32,12 @@ class URL
         $string = preg_replace('/^@\//', URLFactory::site(), $string);
         $string = preg_replace('/^@ctx\//', URLFactory::context(), $string);
         // prefix context for URLs that are just a query/fragment
-        if (substr($string,0,1) == '?') {
+        if (substr($string, 0, 1) == '?') {
             $ctx = URLFactory::context();
             $ctx->setQuery([]);
             $string = $ctx.$string;
         }
-        if (substr($string,0,1) == '#') {
+        if (substr($string, 0, 1) == '#') {
             $ctx = URLFactory::context();
             $ctx->setFragment('');
             $string = $ctx.$string;
@@ -137,7 +140,7 @@ class URL
         if ($this->extension()) {
             if ($extension) {
                 $this->path = preg_replace('@\.[a-z0-9]+$@', ".$extension", $this->path);
-            }else {
+            } else {
                 $this->path = preg_replace('@\.[a-z0-9]+$@', "", $this->path);
             }
         }
@@ -145,7 +148,7 @@ class URL
 
     /**
      * Sort of sloppy tool for urlencoding, but avoiding double-encoding.
-     * It's probably not the best method at the moment, but it gets the job done.
+     * It's probably not the best method, but it gets the job done.
      *
      * @param string $str
      * @return string
@@ -195,12 +198,31 @@ class URL
     public function siteNamespace(): ?string
     {
         if ($path = $this->siteFullPath()) {
-            $ns = preg_replace('/^~([^\/]+)\/.*$/', '$1', $path);
+            $ns = preg_replace('/^'.$this->nsPrefix(true).'([^\/]+)'.$this->nsSuffix(true).'.*$/', '$1', $path);
             return $ns != $path ? $ns : null;
         } else {
             return null;
         }
     }
+
+    protected function nsPrefix(bool $escape=false): string
+    {
+        if ($escape) {
+            return preg_quote(static::NS_PREFIX, '/');
+        } else {
+            return static::NS_PREFIX;
+        }
+    }
+
+    protected function nsSuffix(bool $escape=false): string
+    {
+        if ($escape) {
+            return preg_quote(static::NS_SUFFIX, '/');
+        } else {
+            return static::NS_SUFFIX;
+        }
+    }
+
 
     /**
      * Set only the namespace portion of the site path
@@ -212,7 +234,7 @@ class URL
     {
         $sitePath = $this->sitePath();
         $prePath = substr($this->path(), 0, strlen($this->path()) - strlen($this->siteFullPath()));
-        $namespace = $namespace ? "@$namespace/" : "/";
+        $namespace = $namespace ? $this->nsPrefix()."$namespace".$this->nsSuffix() : "/";
         $this->setPath("$prePath$namespace$sitePath");
     }
 
