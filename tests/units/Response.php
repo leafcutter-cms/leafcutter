@@ -94,6 +94,8 @@ class Response extends atoum\test
             ->given($url = new \mock\Leafcutter\URL('https://www.google.com/'))
             ->given($page = new \mock\Leafcutter\Pages\PageInterface($url))
                 ->given($this->calling($page)->url = $url)
+                ->given($this->calling($page)->dynamic = false)
+                ->given($this->calling($page)->status = 200)
             ->given($this->testedInstance->setSource($page))
                 ->object($this->testedInstance->page())->isEqualTo($page)
                 ->object($this->testedInstance->source())->isEqualTo($page)
