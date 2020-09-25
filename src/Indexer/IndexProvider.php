@@ -28,7 +28,7 @@ class IndexProvider
 
     public function onPageGenerateContent_finalize(PageContentEvent $event)
     {
-        if ($uid = $event->page()->meta('uid')) {
+        if ($event->page()->status() == 200 && $uid = $event->page()->meta('uid')) {
             $index = $this->index('uid');
             $index->save($event->page()->url(), $uid);
         }
