@@ -7,6 +7,6 @@ cache:
   driver: ephemeral
   driver_filesystem_config:
     encoder: Native
-    path: ${cache.directory}CacheProvider
+    path: ${cache.directory}/CacheProvider
   driver_sqlite_config:
-    path: ${cache.directory}CacheProvider
+    path: ${cache.directory}/CacheProvider
