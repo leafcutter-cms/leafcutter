@@ -143,6 +143,9 @@ class Response
         if (method_exists($source, 'status')) {
             $this->setStatus($source->status());
         }
+        if (method_exists($source, 'generateContent')) {
+            $this->setContent($source->generateContent());
+        }
     }
 
     public function setStatus(int $status)

@@ -11,6 +11,16 @@ class Index
     protected $pdo;
     protected $leafcutter;
 
+    public static function normalizeURL($url): string {
+        if ($url instanceof URL) {
+            return $url->siteFullPath() . $url->queryString();
+        }elseif (is_string($url)) {
+            return $url;
+        }else {
+            throw new \Exception("Malformed URL passed to Index", 1);
+        }
+    }
+
     public function __construct(string $name, PDO $pdo, Leafcutter $leafcutter)
     {
         $this->name = $name;
@@ -20,9 +30,7 @@ class Index
 
     public function getByURL($url): array
     {
-        if ($url instanceof URL) {
-            $url = $url->siteFullPath() . $url->queryString();
-        }
+        $url = static::normalizeURL($url);
         return $this->query(
             'SELECT * FROM "' . $this->name . '" WHERE url = :url;',
             [':url' => $url]
@@ -33,6 +41,23 @@ class Index
     {
         return $this->query(
             'SELECT * FROM "' . $this->name . '" WHERE value = :value;',
+            [':value' => $value]
+        );
+    }
+
+    public function deleteByURL($url): array
+    {
+        $url = static::normalizeURL($url);
+        return $this->query(
+            'DELETE FROM "' . $this->name . '" WHERE url = :url;',
+            [':url' => $url]
+        );
+    }
+
+    public function deleteByValue(string $value): array
+    {
+        return $this->query(
+            'DELETE FROM "' . $this->name . '" WHERE value = :value;',
             [':value' => $value]
         );
     }
@@ -96,9 +121,7 @@ class Index
 
     public function item($url, string $value, array $data = []): IndexItem
     {
-        if ($url instanceof URL) {
-            $url = $url->siteFullPath() . $url->queryString();
-        }
+        $url = static::normalizeURL($url);
         return new IndexItem($url, $value, $data, $this);
     }
 

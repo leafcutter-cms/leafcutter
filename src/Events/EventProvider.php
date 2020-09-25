@@ -128,7 +128,7 @@ class EventProvider
         return array_filter(
             get_class_methods($subscriber),
             function ($e) {
-                return preg_match('/^on([A-Z]+[a-z_]*[a-zA-Z])+$/', $e);
+                return preg_match('/^on([A-Z]+[a-z_]*[a-zA-Z0-9]*)+$/', $e);
             }
         );
     }

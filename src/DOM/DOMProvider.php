@@ -74,9 +74,6 @@ class DOMProvider
             $a->setAttribute('data-host', $url->host());
             if ($url->inSite()) {
                 $a->setAttribute('data-insite', 'true');
-                if ($ns = $url->siteNamespace()) {
-                    $a->setAttribute('data-namespace', $ns);
-                }
             } else {
                 $a->setAttribute('data-insite', 'false');
             }
@@ -134,7 +131,7 @@ class DOMProvider
         $node = $event->getNode();
         // try to parse URL
         $url = $node->getAttribute($urlAttribute);
-        if (substr($url,0,5) == 'data:') {
+        if (substr($url, 0, 5) == 'data:') {
             return;
         }
         if (!$url || !($url = new URL($url))) {
@@ -145,6 +142,12 @@ class DOMProvider
             $event->setSource($page);
             $node->setAttribute($urlAttribute, $page->url());
             $node->setAttribute('data-link-type', 'page');
+            if ($ns = $page->url()->siteNamespace()) {
+                $node->setAttribute('data-namespace', $ns);
+            }
+            if ($page->status() != 200) {
+                $node->setAttribute('data-page-status', $page->status());
+            }
             $this->leafcutter->events()->dispatchEvent(
                 'onDOMElement_' . $node->tagName . '_page',
                 $event
@@ -155,6 +158,9 @@ class DOMProvider
         if ($includeAssets && $asset = $this->leafcutter->assets()->get($url)) {
             // dispatch event for all asset types
             $node->setAttribute('data-link-type', 'asset');
+            if ($ns = $asset->url()->siteNamespace()) {
+                $node->setAttribute('data-namespace', $ns);
+            }
             $event->setSource($asset);
             $this->leafcutter->events()->dispatchEvent(
                 'onDOMElement_' . $node->tagName . '_asset',

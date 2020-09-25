@@ -13,11 +13,11 @@ class URLFactory extends atoum\test
         $_SERVER['HTTPS'] = 'on';
         $_SERVER['HTTP_HOST'] = 'test.domain';
         $_SERVER['REQUEST_URI'] = '/foo/bar';
-        $this->boolean(Factory::normalizeCurrent())->isTrue();
-        $this->boolean(Factory::normalizeCurrent(new URL('https://test.domain/foo/bar')))->isTrue();
-        $this->boolean(Factory::normalizeCurrent(new URL('http://test.domain/foo/bar')))->isTrue();
-        $this->boolean(Factory::normalizeCurrent(new URL('https://test.domain/foo/bar'), false, false))->isFalse();
-        $this->boolean(Factory::normalizeCurrent(new URL('http://test.domain/foo/bar'), false, false))->isFalse();
+        $this->variable(Factory::normalizeCurrent())->isEqualTo('https://test.domain/foo/bar/');
+        $this->variable(Factory::normalizeCurrent(new URL('https://test.domain/foo/bar')))->isEqualTo('https://test.domain/foo/bar/');
+        $this->variable(Factory::normalizeCurrent(new URL('http://test.domain/foo/bar')))->isEqualTo('http://test.domain/foo/bar/');
+        $this->variable(Factory::normalizeCurrent(new URL('https://test.domain/foo/bar'), false, false))->isNull();
+        $this->variable(Factory::normalizeCurrent(new URL('http://test.domain/foo/bar'), false, false))->isNull();
         Factory::endSite();
     }
 

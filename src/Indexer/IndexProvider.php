@@ -1,6 +1,7 @@
 <?php
 namespace Leafcutter\Indexer;
 
+use Leafcutter\Common\Collection;
 use Leafcutter\Leafcutter;
 use Leafcutter\Pages\Page;
 use Leafcutter\Pages\PageContentEvent;
@@ -20,10 +21,15 @@ class IndexProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
+    public function onErrorPage(Page $page)
+    {
+        $this->index('uid')->deleteByURL($page->url());
+    }
+
     public function onPageGenerateContent_finalize(PageContentEvent $event)
     {
         if ($uid = $event->page()->meta('uid')) {
-            $index = $this->get('uid');
+            $index = $this->index('uid');
             $index->save($event->page()->url(), $uid);
         }
     }
@@ -31,8 +37,8 @@ class IndexProvider
     public function onPageGet_namespace_uid(URL $url): ?Page
     {
         $url->fixSlashes();
-        $uid = trim($url->sitePath(),'/');
-        $results = $this->get('uid')->getByValue($uid);
+        $uid = trim($url->sitePath(), '/');
+        $results = $this->index('uid')->getByValue($uid);
         $results = array_map(
             function ($i) {
                 return $this->leafcutter->pages()->get($i->url());
@@ -45,7 +51,7 @@ class IndexProvider
                 return $this->leafcutter->pages()->get($results[0]->url());
             } else {
                 $page = $this->leafcutter->pages()->error($url, 300);
-                $page->meta('300-options', $results);
+                $page->meta('pages.related', new Collection($results));
                 $page->setUrl($url);
                 return $page;
             }
@@ -59,7 +65,7 @@ class IndexProvider
         return is_file($this->indexFile($name));
     }
 
-    public function get(string $name, string $class = null): ?Index
+    public function index(string $name, string $class = null): ?Index
     {
         $name = $this->sanitizeName($name);
         if ($class) {

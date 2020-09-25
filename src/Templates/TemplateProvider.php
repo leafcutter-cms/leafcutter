@@ -68,6 +68,9 @@ class TemplateProvider
             function ($item) {
                 if (\is_string($item)) {
                     $item = $this->leafcutter->find($item);
+                    if (!$item) {
+                        return '[link not found]';
+                    }
                 }
                 if (\method_exists($item, 'link')) {
                     return $item->link();

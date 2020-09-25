@@ -96,6 +96,7 @@ class Response extends atoum\test
                 ->given($this->calling($page)->url = $url)
                 ->given($this->calling($page)->dynamic = false)
                 ->given($this->calling($page)->status = 200)
+                ->given($this->calling($page)->generateContent = 'foobar')
             ->given($this->testedInstance->setSource($page))
                 ->object($this->testedInstance->page())->isEqualTo($page)
                 ->object($this->testedInstance->source())->isEqualTo($page)

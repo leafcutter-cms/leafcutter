@@ -97,23 +97,14 @@ class Leafcutter
         if (!$response) {
             $response = new Response();
             $response->setURL($url);
-            $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url);
-            if ($page && $normalizationRedirect) {
-                if ($bounce = URLFactory::normalizeCurrent($page->url())) {
-                    // URLFactory is requesting a URL normalization redirect, so we're done
-                    $response->redirect($bounce, 308);
-                    return $response;
-                }
-            }
-            if (!$page) {
-                $page = $this->pages()->error($url, 404);
-                $response->setStatus(404);
-            }
-            if ($page) {
-                $response->setContent($page->generateContent());
-            } else {
-                $response->setStatus(404);
-                $response->setContent('<!doctype html><html><body><h1>404 not found</h1><p>Additionally, no error page could be located.</p></body></html>');
+            $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url) ?? $this->pages()->error($url, 404);
+        }
+        // normalize URL
+        if ($page && $normalizationRedirect) {
+            if ($bounce = URLFactory::normalizeCurrent($page->url())) {
+                // URLFactory is requesting a URL normalization redirect, so we're done
+                $response->redirect($bounce, 308);
+                return $response;
             }
         }
         // dispatch final events and return
