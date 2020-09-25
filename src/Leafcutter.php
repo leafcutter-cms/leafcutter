@@ -1,28 +1,55 @@
 <?php
 namespace Leafcutter;
 
+use Leafcutter\Addons\AddonProvider;
+use Leafcutter\Assets\AssetProvider;
+use Leafcutter\Cache\CacheProvider;
+use Leafcutter\Content\ContentProvider;
+use Leafcutter\DOM\DOMProvider;
+use Leafcutter\Events\EventProvider;
+use Leafcutter\Images\ImageProvider;
+use Leafcutter\Indexer\IndexProvider;
+use Leafcutter\Pages\PageProvider;
+use Leafcutter\Templates\TemplateProvider;
+use Leafcutter\Themes\ThemeProvider;
 use Monolog\Logger;
 
 class Leafcutter
 {
     private static $instances = [];
-    private $config, $events, $cache, $content, $pages, $assets, $images, $templates, $theme, $dom, $statics;
+    private $config;
+    private $events;
+    private $cache;
+    private $content;
+    private $pages;
+    private $assets;
+    private $images;
+    private $templates;
+    private $theme;
+    private $dom;
+    private $statics;
 
     private function __construct(Config\Config $config = null, Logger $logger = null)
     {
         $this->logger = $logger ?? new Logger('leafcutter');
         $this->config = $config ?? new Config\Config();
-        $this->events = new Events\EventProvider($this);
-        $this->cache = new Cache\CacheProvider($this);
-        $this->content = new Content\ContentProvider($this);
-        $this->pages = new Pages\PageProvider($this);
-        $this->assets = new Assets\AssetProvider($this);
-        $this->images = new Images\ImageProvider($this);
-        $this->templates = new Templates\TemplateProvider($this);
-        $this->theme = new Themes\ThemeProvider($this);
-        $this->dom = new DOM\DOMProvider($this);
-        $this->addons = new Addons\AddonProvider($this);
+        $this->events = new EventProvider($this);
+        $this->cache = new CacheProvider($this);
+        $this->content = new ContentProvider($this);
+        $this->pages = new PageProvider($this);
+        $this->assets = new AssetProvider($this);
+        $this->images = new ImageProvider($this);
+        $this->templates = new TemplateProvider($this);
+        $this->theme = new ThemeProvider($this);
+        $this->dom = new DOMProvider($this);
+        $this->indexer = new IndexProvider($this);
+        $this->addons = new AddonProvider($this);
         $this->events()->dispatchAll('onLeafcutterConstructed', $this);
+    }
+
+    public function indexer(): IndexProvider
+    {
+        return $this->indexer;
     }
 
     public function logger(): Logger
@@ -30,12 +57,12 @@ class Leafcutter
         return $this->logger;
     }
 
-    public function theme(): Themes\ThemeProvider
+    public function theme(): ThemeProvider
     {
         return $this->theme;
     }
 
-    public function addons(): Addons\AddonProvider
+    public function addons(): AddonProvider
     {
         return $this->addons;
     }
@@ -70,23 +97,14 @@ class Leafcutter
         if (!$response) {
             $response = new Response();
             $response->setURL($url);
-            $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url);
-            if ($page && $normalizationRedirect) {
-                if (URLFactory::normalizeCurrent($page->url())) {
-                    // URLFactory is requesting a URL normalization redirect, so we're done
-                    $response->redirect($page->url(), 308);
-                    return $response;
-                }
-            }
-            if (!$page) {
-                $page = $this->pages()->error($url, 404);
-                $response->setStatus(404);
-            }
-            if ($page) {
-                $response->setContent($page->generateContent());
-            } else {
-                $response->setStatus(404);
-                $response->setContent('<!doctype html><html><body><h1>404 not found</h1><p>Additionally, no error page could be located.</p></body></html>');
+            $page = $this->pages()->get($url) ?? $this->events()->dispatchFirst('onResponsePageURL', $url) ?? $this->pages()->error($url, 404);
+        }
+        // normalize URL
+        if ($page && $normalizationRedirect) {
+            if ($bounce = URLFactory::normalizeCurrent($page->url())) {
+                // URLFactory is requesting a URL normalization redirect, so we're done
+                $response->redirect($bounce, 308);
+                return $response;
             }
         }
         // dispatch final events and return
@@ -102,27 +120,27 @@ class Leafcutter
         return $response;
     }
 
-    public function cache(): Cache\CacheProvider
+    public function cache(): CacheProvider
     {
         return $this->cache;
     }
 
-    public function images(): Images\ImageProvider
+    public function images(): ImageProvider
     {
         return $this->images;
     }
 
-    public function dom(): DOM\DOMProvider
+    public function dom(): DOMProvider
     {
         return $this->dom;
     }
 
-    public function assets(): Assets\AssetProvider
+    public function assets(): AssetProvider
     {
         return $this->assets;
     }
 
-    public function templates(): Templates\TemplateProvider
+    public function templates(): TemplateProvider
     {
         return $this->templates;
     }
@@ -135,17 +153,17 @@ class Leafcutter
         return $this->config[$key];
     }
 
-    public function events(): Events\EventProvider
+    public function events(): EventProvider
     {
         return $this->events;
     }
 
-    public function content(): Content\ContentProvider
+    public function content(): ContentProvider
     {
         return $this->content;
     }
 
-    public function pages(): Pages\PageProvider
+    public function pages(): PageProvider
     {
         return $this->pages;
     }

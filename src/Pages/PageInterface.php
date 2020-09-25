@@ -17,4 +17,8 @@ interface PageInterface
     public function children(): Collection;
     public function parent(): ?PageInterface;
     public function meta(string $key, $value = null);
+    public function status(): int;
+    public function setStatus(int $status);
+    public function dynamic(): bool;
+    public function setDynamic(bool $dynamic);
 }

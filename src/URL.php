@@ -65,6 +65,13 @@ class URL
         $this->setFragment($parsed['fragment'] ?? '');
     }
 
+    public function fixSlashes()
+    {
+        if ($this->path() != 'favicon.ico' && !preg_match('@(/|\.html)$@', $this->path())) {
+            $this->setPath($this->path() . '/');
+        }
+    }
+
     /**
      * URL-safe base64 encoding
      *

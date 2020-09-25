@@ -32,7 +32,7 @@ class Response
         foreach ($this->headers as $key => $value) {
             header("$key: $value");
         }
-        header('content-type: '.$this->mime.'; charset='.$this->charset);
+        header('content-type: ' . $this->mime . '; charset=' . $this->charset);
     }
 
     public function doAfter(callable $fn)
@@ -119,11 +119,11 @@ class Response
         return $this->source;
     }
 
-    public function page() : ?PageInterface
+    public function page(): ?PageInterface
     {
         if ($this->source instanceof PageInterface) {
             return $this->source;
-        }else {
+        } else {
             return null;
         }
     }
@@ -139,6 +139,12 @@ class Response
         }
         if (method_exists($source, 'url')) {
             $this->setURL($source->url());
+        }
+        if (method_exists($source, 'status')) {
+            $this->setStatus($source->status());
+        }
+        if (method_exists($source, 'generateContent')) {
+            $this->setContent($source->generateContent());
         }
     }
 

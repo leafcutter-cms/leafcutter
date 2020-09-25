@@ -19,6 +19,20 @@ class PageProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
+    public function onErrorPage_404(Page $page)
+    {
+        $url = explode('/', '@/' . $page->url()->siteFullPath());
+        $options = [];
+        do {
+            if ($rel = $this->leafcutter->pages()->get(new URL(implode('/', $url)))) {
+                $options[] = $rel;
+            }
+        } while (array_pop($url) && count($url) > 1);
+        if ($options) {
+            $page->meta('pages.related', new Collection($options));
+        }
+    }
+
     public function onPageGenerateContent_finalize(PageContentEvent $event)
     {
         $event->setContent(
@@ -57,6 +71,13 @@ class PageProvider
     public function parent(URL $url): ?PageInterface
     {
         $page = $this->get($url);
+        if ($page && $parent = $page->meta('parent')) {
+            if ($parent instanceof PageInterface) {
+                return $parent;
+            } elseif ($parent = $this->get($parent)) {
+                return $parent;
+            }
+        }
         if (!$page || $page->url()->siteFullPath() == '') {
             return null;
         }
@@ -82,6 +103,16 @@ class PageProvider
     {
         $search = preg_replace('@[^\/]+$@', '', $url->siteFullPath()) . '*';
         $result = $this->search($search, $url->siteNamespace());
+        $parent = $this->get($url);
+        if ($parent && $parent->meta('pages.children')) {
+            foreach ($parent->meta('pages.children') as $c) {
+                if ($c instanceof PageInterface) {
+                    $result->add($c);
+                } elseif ($c = $this->get(new URL($c))) {
+                    $result->add($c);
+                }
+            }
+        }
         $result->remove($this->get($url));
         return $result;
     }
@@ -162,10 +193,13 @@ class PageProvider
         // if still nothing was found, try again with code 999
         if ($page === null && $code != 999) {
             $page = $this->error($url, 999, $code);
+            $page->meta('error.code', $originalCode ?? $code);
         }
-        // if we got a page, return it
+        // if we got a page, set it up with its values and status before returning
         if ($page !== null) {
             $page->setUrl($url);
+            $page->setStatus($originalCode ?? $code);
+            $page->setDynamic(true);
         }
         return $page;
     }
@@ -191,9 +225,15 @@ class PageProvider
         }
         $this->stack[] = "$url";
         // allow URLs to be transformed
+        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
         $this->leafcutter->events()
             ->dispatchEvent('onPageURL', $url);
-        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
+        // special event names for namespaces
+        if ($url->siteNamespace()) {
+            $this->leafcutter->events()
+                ->dispatchEvent('onPageURL_namespace_' . $url->siteNamespace(), $url);
+        }
+        $this->leafcutter->logger()->debug('PageProvider: post-transform(' . $url . ')');
         // allow pages to fully bypass entire return system
         $page =
         $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ??
@@ -224,6 +264,12 @@ class PageProvider
         }
         // return page after dispatching events
         if ($page) {
+            // dispatch error events
+            if ($page->status() != 200) {
+                $this->leafcutter->events()->dispatchAll('onErrorPage', $page);
+                $this->leafcutter->events()->dispatchAll('onErrorPage_' . $page->status(), $page);
+            }
+            // dispatch normal events
             $page->meta('date.modified', filemtime($file->path()));
             $event = new PageEvent($page, $url);
             $this->leafcutter->events()->dispatchEvent('onPageReady', $event);

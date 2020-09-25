@@ -3,12 +3,14 @@
 *.ignore
 *.log
 
-/demo/assets
+/demo/assets/*
 /demo/cache
 /demo/**/*.html
 /demo/content/*
 !/demo/content/index.md
 env.yaml
+/demo/storage/*
+!/demo/**/README.md
 
 /src/Composer/*.txt
 /src/Composer/themes/*
