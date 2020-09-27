@@ -5,7 +5,7 @@ use Leafcutter\URL;
 
 class IndexItem
 {
-    public function __construct(string $url, string $value, array $data, Index $index)
+    public function __construct(string $url, string $value, array $data, AbstractIndex $index)
     {
         $this->url = $url;
         $this->value = $value;

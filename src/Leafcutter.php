@@ -27,7 +27,6 @@ class Leafcutter
     private $templates;
     private $theme;
     private $dom;
-    private $statics;
 
     private function __construct(Config\Config $config = null, Logger $logger = null)
     {
@@ -44,7 +43,7 @@ class Leafcutter
         $this->dom = new DOMProvider($this);
         $this->indexer = new IndexProvider($this);
         $this->addons = new AddonProvider($this);
-        $this->events()->dispatchAll('onLeafcutterConstructed', $this);
+        $this->events()->dispatchEvent('onLeafcutterConstructed', $this);
     }
 
     public function indexer(): IndexProvider

@@ -2,14 +2,48 @@
 namespace Leafcutter\Indexer;
 
 use Leafcutter\Leafcutter;
+use Leafcutter\Pages\Page;
+use Leafcutter\Pages\PageContentEvent;
 use Leafcutter\URL;
 use PDO;
 
-class Index
+abstract class AbstractIndex
 {
+    const AUTO_CLEAR = true;
+
     protected $name;
     protected $pdo;
     protected $leafcutter;
+    
+    abstract public function indexPage(Page $page);
+
+    public function __construct(string $name, PDO $pdo, Leafcutter $leafcutter)
+    {
+        $this->name = $name;
+        $this->pdo = $pdo;
+        $this->leafcutter = $leafcutter;
+        $this->leafcutter->events()->addSubscriber($this);
+    }
+
+    public function onErrorPage(Page $page)
+    {
+        $this->removePage($page);
+    }
+
+    public function removePage(Page $page)
+    {
+        $this->deleteByURL($page->url());
+    }
+
+    public function onPageGenerateContent_finalize(PageContentEvent $event)
+    {
+        if ($event->page()->status() == 200) {
+            if (static::AUTO_CLEAR) {
+                $this->removePage($event->page());
+            }
+            $this->indexPage($event->page());
+        }
+    }
 
     public static function normalizeURL($url): string {
         if ($url instanceof URL) {
@@ -19,13 +53,6 @@ class Index
         }else {
             throw new \Exception("Malformed URL passed to Index", 1);
         }
-    }
-
-    public function __construct(string $name, PDO $pdo, Leafcutter $leafcutter)
-    {
-        $this->name = $name;
-        $this->pdo = $pdo;
-        $this->leafcutter = $leafcutter;
     }
 
     public function getByURL($url): array

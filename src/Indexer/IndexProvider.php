@@ -1,11 +1,7 @@
 <?php
 namespace Leafcutter\Indexer;
 
-use Leafcutter\Common\Collection;
 use Leafcutter\Leafcutter;
-use Leafcutter\Pages\Page;
-use Leafcutter\Pages\PageContentEvent;
-use Leafcutter\URL;
 use PDO;
 
 class IndexProvider
@@ -21,42 +17,9 @@ class IndexProvider
         $this->leafcutter->events()->addSubscriber($this);
     }
 
-    public function onErrorPage(Page $page)
+    public function onLeafcutterConstructed(Leafcutter $leafcutter)
     {
-        $this->index('uid')->deleteByURL($page->url());
-    }
-
-    public function onPageGenerateContent_finalize(PageContentEvent $event)
-    {
-        if ($event->page()->status() == 200 && $uid = $event->page()->meta('uid')) {
-            $index = $this->index('uid');
-            $index->save($event->page()->url(), $uid);
-        }
-    }
-
-    public function onPageGet_namespace_uid(URL $url): ?Page
-    {
-        $url->fixSlashes();
-        $uid = trim($url->sitePath(), '/');
-        $results = $this->index('uid')->getByValue($uid);
-        $results = array_map(
-            function ($i) {
-                return $this->leafcutter->pages()->get($i->url());
-            },
-            $results
-        );
-        $results = array_filter($results);
-        if ($results) {
-            if (count($results) == 1) {
-                return $this->leafcutter->pages()->get($results[0]->url());
-            } else {
-                $page = $this->leafcutter->pages()->error($url, 300);
-                $page->meta('pages.related', new Collection($results));
-                $page->setUrl($url);
-                return $page;
-            }
-        }
-        return null;
+        $this->index('uid', UIDIndex::class);
     }
 
     public function exists(string $name): bool
@@ -65,7 +28,7 @@ class IndexProvider
         return is_file($this->indexFile($name));
     }
 
-    public function index(string $name, string $class = null): ?Index
+    public function index(string $name, string $class): ?AbstractIndex
     {
         $name = $this->sanitizeName($name);
         if ($class) {
@@ -73,7 +36,7 @@ class IndexProvider
         }
         $create = !$this->exists($name);
         if (!isset($this->indexes[$name])) {
-            $class = @$this->classes[$name] ?? Index::class;
+            $class = $this->classes[$name];
             $this->indexes[$name] = new $class($name, $this->pdo($name), $this->leafcutter);
             if ($create) {
                 $this->indexes[$name]->create();
@@ -82,7 +45,7 @@ class IndexProvider
         return $this->indexes[$name];
     }
 
-    public function setClass(string $name, string $class)
+    protected function setClass(string $name, string $class)
     {
         $name = $this->sanitizeName($name);
         // unset from cache if class is changed
