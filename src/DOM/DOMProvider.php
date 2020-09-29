@@ -241,7 +241,7 @@ class DOMProvider
                 return $out;
             }
         }
-        foreach ($dom->childNodes as $c) {
+        foreach ($dom->childNodes ?? [] as $c) {
             if ($out = $this->bodyOnly($c)) {
                 return $out;
             }
