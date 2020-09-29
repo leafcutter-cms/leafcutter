@@ -5,10 +5,13 @@ use Leafcutter\URL;
 
 class IndexItem
 {
-    public function __construct(string $url, string $value, array $data, AbstractIndex $index)
+    protected $url, $value, $sort, $data, $index;
+
+    public function __construct(string $url, string $value, string $sort, array $data, AbstractIndex $index)
     {
         $this->url = $url;
         $this->value = $value;
+        $this->sort = $sort;
         $this->data = $data;
         $this->index = $index;
     }
@@ -26,6 +29,11 @@ class IndexItem
     public function value(): string
     {
         return $this->value;
+    }
+
+    public function sort(): string
+    {
+        return $this->sort;
     }
 
     public function data(): array

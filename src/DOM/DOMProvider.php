@@ -1,6 +1,8 @@
 <?php
 namespace Leafcutter\DOM;
 
+use DOMElement;
+use DOMNode;
 use Leafcutter\Assets\ImageInterface;
 use Leafcutter\Leafcutter;
 use Leafcutter\Pages\PageContentEvent;
@@ -30,9 +32,11 @@ class DOMProvider
         if (substr($response->content(), 0, 9) != '<!doctype') {
             return;
         }
+        URLFactory::beginContext($response->url());
         $response->setContent(
             $this->html($response->content())
         );
+        URLFactory::endContext();
     }
 
     /**
@@ -45,11 +49,9 @@ class DOMProvider
      */
     public function onPageGenerateContent_finalize(PageContentEvent $event)
     {
-        URLFactory::beginContext($event->page()->calledUrl());
         $event->setContent(
-            $this->html($event->content())
+            $this->html($event->content(), true)
         );
-        URLFactory::endContext();
     }
 
     /**
@@ -196,9 +198,10 @@ class DOMProvider
      * Turn a given HTML string into one that has been processed.
      *
      * @param string $html
+     * @param bool $fragment
      * @return string
      */
-    protected function html(string $html): string
+    protected function html(string $html, bool $fragment = false): string
     {
         $html = $this->leafcutter->events()->dispatchAll('onDOMProcess', $html);
 
@@ -208,20 +211,42 @@ class DOMProvider
             return $html;
         }
         // dispatch events
-        $this->dispatchEvents($dom);
+        $this->dispatchEvents($dom, $fragment ? 'fragment' : 'full');
 
         //normalize and output to HTML
         $dom->normalizeDocument();
-        $html = trim(preg_replace(
-            '/^<\?.+\?>/',
-            '',
-            $dom->saveHTML()
-        ));
+        if (!$fragment) {
+            $html = $dom->saveHTML();
+        } else {
+            $html = $this->bodyOnly($dom);
+            if ($html === null) {
+                $html = $dom->saveHTML();
+            }
+        }
         //fix self-closing tags that aren't actually allowed to self-close in HTML
         $html = preg_replace('@(<(a|script|noscript|table|iframe|noframes|canvas|style)[^>]*)/>@ims', '$1></$2>', $html);
 
         // return after passing through another hook
         return $this->leafcutter->events()->dispatchAll('onDOMReady', $html);
+    }
+
+    protected function bodyOnly(DOMNode $dom): ?string
+    {
+        if ($dom instanceof DOMElement) {
+            if ($dom->tagName == 'body') {
+                $out = '';
+                foreach ($dom->childNodes as $c) {
+                    $out .= $dom->ownerDocument->saveHTML($c);
+                }
+                return $out;
+            }
+        }
+        foreach ($dom->childNodes as $c) {
+            if ($out = $this->bodyOnly($c)) {
+                return $out;
+            }
+        }
+        return null;
     }
 
     public function onDOMComment(DOMEvent $event)
@@ -243,10 +268,11 @@ class DOMProvider
      * @param \DOMNode $node
      * @return void
      */
-    protected function dispatchEvents(\DOMNode $node)
+    protected function dispatchEvents(\DOMNode $node, string $phase)
     {
         $context = null;
         //pick event name if applicable
+        $eventNames = [];
         if ($node instanceof \DOMElement) {
             //skip events on elements with data-leafcutter-dom-events="off"
             if ($node->getAttribute('data-leafcutter-dom-events') == 'off') {
@@ -257,17 +283,18 @@ class DOMProvider
                 URLFactory::beginContext(new URL($context));
             }
             //onDOMElement_{tagname} event name
-            $eventName = 'onDOMElement_' . $node->tagName;
+            $eventNames[] = 'onDOMElement_' . $node->tagName;
+            $eventNames[] = 'onDOMElement_' . $node->tagName . '_' . $phase;
         } elseif ($node instanceof \DOMComment) {
             //onDOMComment event name
-            $eventName = 'onDOMComment';
+            $eventNames[] = 'onDOMComment';
+            $eventNames[] = 'onDOMComment_' . $phase;
         } elseif ($node instanceof \DOMText) {
-            $eventName = 'onDOMText';
-        } else {
-            $eventName = null;
+            $eventNames[] = 'onDOMText';
+            $eventNames[] = 'onDOMText_' . $phase;
         }
         //dispatch event if necessary
-        if ($eventName) {
+        foreach ($eventNames as $eventName) {
             $event = $this->leafcutter->events()->dispatchEvent($eventName, new DOMEvent($node));
             //do deletion if event calls for it
             if ($event->getDelete()) {
@@ -279,7 +306,7 @@ class DOMProvider
                 @$newNode->appendXML($html);
                 $node->parentNode->replaceChild($newNode, $node);
                 $node = $newNode;
-                $this->dispatchEvents($newNode);
+                $this->dispatchEvents($newNode, $phase);
             }
         }
         //recurse into children if found
@@ -293,7 +320,7 @@ class DOMProvider
             }
             //loop through new array of child nodes
             foreach ($children as $child) {
-                $this->dispatchEvents($child);
+                $this->dispatchEvents($child, $phase);
             }
         }
         //end context from HTML

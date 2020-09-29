@@ -1,0 +1,32 @@
+{% if pageCount > 1 %}
+    <div class="paginator">
+        <div class="paginator-links">
+            <span class="paginator-links-backward">
+                {% if page > 2 %}
+                    <a href="?{{arg}}=1">first</a>
+                {% endif %}
+                {% if page > 1 %}
+                    <a href="?{{arg}}={{page-1}}">previous</a>
+                {% endif %}
+            </span>
+            <span class="paginator-links-numeric">
+                {% for p in 1..pageCount %}
+                    {% if p == page %}
+                    <a href="?{{arg}}={{p}}">{{p}}</a>
+                    {% else %}
+                    <a href="?{{arg}}={{p}}">{{p}}</a>
+                    {% endif %}
+                {% endfor %}
+            </span>
+            <span class="paginator-links-forward">
+                {% if page < pageCount %}
+                    <a href="?{{arg}}={{page+1}}">next</a>
+                {% endif %}
+                {% if page < pageCount-1 %}
+                    <a href="?{{arg}}={{pageCount}}">last</a>
+                {% endif %}
+            </span>
+        </div>
+        <div class="paginator-indicator">Displaying page {{page}} of {{pageCount}}</div>
+    </div>
+{% endif %}

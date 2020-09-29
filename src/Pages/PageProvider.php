@@ -21,15 +21,20 @@ class PageProvider
 
     public function onErrorPage_404(Page $page)
     {
-        $url = explode('/', '@/' . $page->url()->siteFullPath());
+        $url = array_filter(explode('/', $page->url()->siteFullPath()));
+        array_pop($url);
+        $checking = '';
         $options = [];
-        do {
-            if ($rel = $this->leafcutter->pages()->get(new URL(implode('/', $url)))) {
-                $options[] = $rel;
+        foreach ($url as $chunk) {
+            $checking .= "$chunk/";
+            if ($related = $this->get(new URL("@/$checking"))) {
+                if ($related->status() == 200) {
+                    $options[] = $related;
+                }
             }
-        } while (array_pop($url) && count($url) > 1);
+        }
         if ($options) {
-            $page->meta('pages.related', new Collection($options));
+            $page->meta('pages.related', new Collection(array_reverse($options)));
         }
     }
 
@@ -83,10 +88,13 @@ class PageProvider
         }
         $path = dirname($page->url()->siteFullPath());
         while (true) {
+
             if ($path == '.') {
                 return $this->get(new URL("@/"));
             }
-            if ($page = $this->get(new URL("@/$path"))) {
+            $url = new URL("@/$path");
+            $url->fixSlashes();
+            if ($page = $this->get($url)) {
                 return $page;
             }
             $ppath = dirname($path);
@@ -178,17 +186,14 @@ class PageProvider
         $namespace = $url->siteNamespace();
         $page = null;
         do {
-            $errorPath = implode('/', $currentPath) . "/_error_pages/$code/";
-            if ($namespace) {
-                $errorPath = "@$namespace/$errorPath";
-            }
-            $errorUrl = new URL("@/$errorPath");
-            $page = $this->get($errorUrl);
+            $errorPath = trim(implode('/', $currentPath), '/');
+            $errorPath .= "/_error_pages/$code/index.*";
+            $errorPath = trim($errorPath, '/');
+            $page = $this->getFromPath($url, $errorPath, $namespace);
         } while ($page === null && array_pop($currentPath) !== null);
         // if nothing was found, try again in the root
         if ($page === null && $namespace) {
-            $errorUrl = new URL("@/_error_pages/$code/");
-            $page = $this->get($errorUrl);
+            $page = $this->getFromPath($url, "_error_pages/$code/index.*");
         }
         // if still nothing was found, try again with code 999
         if ($page === null && $code != 999) {
@@ -204,14 +209,55 @@ class PageProvider
         return $page;
     }
 
-    public function get(URL $url): ?PageInterface
+    public function getFromPath(URL $url, string $path, ?string $namespace = ''): ?PageInterface
     {
-        URLFactory::beginContext($url);
-        // skip non-site URLs
-        if (!$url->inSite()) {
-            URLFactory::endContext();
-            return null;
+        // begin context
+        if (!$this->beginContext($url)) {
+            return $this->error($url, 555);
         }
+        // look for files from that path
+        $files = $this->leafcutter->content()->files($path, $namespace);
+        foreach ($files as $file) {
+            // if a page is returned by getFromFile it is already finalized
+            $page = $this->getFromFile($url, $file->path());
+            if ($page) {
+                $page->meta('date.modified', filemtime($file->path()));
+                $this->endContext();
+                return $page;
+            }
+        }
+        $this->endContext();
+        return null;
+    }
+
+    public function getFromFile(URL $url, string $file): ?PageInterface
+    {
+        // begin context
+        if (!$this->beginContext($url)) {
+            return $this->error($url, 555);
+        }
+        // construct page from file
+        $extension = preg_replace('/^.+\.([a-z0-9]+)/', '$1', $file);
+        if ($extension == $file) {
+            $eventName = 'onPageFile';
+        } else {
+            $eventName = 'onPageFile_' . $extension;
+        }
+        // build page
+        $page = $this->leafcutter->events()->dispatchFirst(
+            $eventName,
+            new PageFileEvent($file, $url)
+        );
+        $page = $this->finalizePage($page);
+        // end context and return
+        $this->endContext();
+        return $page;
+    }
+
+    protected function beginContext(URL $url): bool
+    {
+        // begin context
+        URLFactory::beginContext($url);
         // break recursion if the same page is seen too many times in a cycle
         $recursionCount = count(array_filter(
             $this->stack,
@@ -221,67 +267,70 @@ class PageProvider
         ));
         if ($recursionCount > 4) {
             URLFactory::endContext();
-            return $this->error($url, 555);
+            return false;
         }
+        // add to stack if we return true
         $this->stack[] = "$url";
-        // allow URLs to be transformed
-        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
-        $this->leafcutter->events()
-            ->dispatchEvent('onPageURL', $url);
-        // special event names for namespaces
-        if ($url->siteNamespace()) {
-            $this->leafcutter->events()
-                ->dispatchEvent('onPageURL_namespace_' . $url->siteNamespace(), $url);
-        }
-        $this->leafcutter->logger()->debug('PageProvider: post-transform(' . $url . ')');
-        // allow pages to fully bypass entire return system
-        $page =
-        $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ??
-        $this->leafcutter->events()->dispatchFirst('onPageGet', $url);
-        if ($page) {
-            array_pop($this->stack);
-            URLFactory::endContext();
-            return $page;
-        }
-        // allow events to build pages from any URL
-        $page =
-        $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageBuild_namespace_' . $url->siteNamespace(), $url) : null ??
-        $this->leafcutter->events()->dispatchFirst('onPageBuild', $url);
-        // otherwise attempt to make a page from content files
-        if (!$page) {
-            $path = $this->searchPath($url->sitePath());
-            $namespace = $url->siteNamespace();
-            $files = $this->leafcutter->content()->files($path, $namespace);
-            foreach ($files as $file) {
-                $page = $this->leafcutter->events()->dispatchFirst(
-                    'onPageFile_' . $file->extension(),
-                    new PageFileEvent($file->path(), $url)
-                );
-                if ($page) {
-                    break;
-                }
-            }
-        }
-        // return page after dispatching events
-        if ($page) {
-            // dispatch error events
-            if ($page->status() != 200) {
-                $this->leafcutter->events()->dispatchAll('onErrorPage', $page);
-                $this->leafcutter->events()->dispatchAll('onErrorPage_' . $page->status(), $page);
-            }
-            // dispatch normal events
-            $page->meta('date.modified', filemtime($file->path()));
-            $event = new PageEvent($page, $url);
-            $this->leafcutter->events()->dispatchEvent('onPageReady', $event);
-            $this->leafcutter->events()->dispatchEvent('onPageReturn', $event);
-            array_pop($this->stack);
-            URLFactory::endContext();
-            return $event->page();
-        } else {
-            array_pop($this->stack);
-            URLFactory::endContext();
+        return true;
+    }
+
+    protected function endContext()
+    {
+        array_pop($this->stack);
+        URLFactory::endContext();
+    }
+
+    public function get(URL $url): ?PageInterface
+    {
+        // skip non-site URLs
+        if (!$url->inSite()) {
             return null;
         }
+        // begin context
+        if (!$this->beginContext($url)) {
+            return $this->error($url, 555);
+        }
+        // allow URLs to be transformed
+        $this->leafcutter->logger()->debug('PageProvider: get(' . $url . ')');
+        $this->leafcutter->events()->dispatchEvent('onPageURL', $url);
+        // special event names for namespaces
+        if ($url->siteNamespace()) {
+            $this->leafcutter->events()->dispatchEvent('onPageURL_namespace_' . $url->siteNamespace(), $url);
+        }
+        // allow pages to fully bypass entire return system
+        $page = $url->siteNamespace() ? $this->leafcutter->events()->dispatchFirst('onPageGet_namespace_' . $url->siteNamespace(), $url) : null ?? $this->leafcutter->events()->dispatchFirst('onPageGet', $url);
+        if ($page) {
+            $page = $this->finalizePage($page);
+            $this->endContext();
+            return $page;
+        }
+        // otherwise attempt to make a page from content files (already finalized by getFromPath())
+        $page = $this->getFromPath($url, $this->searchPath($url->sitePath()), $url->siteNamespace());
+        if ($page) {
+            $this->endContext();
+            return $page;
+        }
+        // nothing found, return null
+        $this->endContext();
+        return null;
+    }
+
+    protected function finalizePage(?PageInterface $page): ?PageInterface
+    {
+        // return null for null
+        if ($page === null) {
+            return null;
+        }
+        // dispatch error events
+        if ($page->status() != 200) {
+            $this->leafcutter->events()->dispatchEvent('onErrorPage', $page);
+            $this->leafcutter->events()->dispatchEvent('onErrorPage_' . $page->status(), $page);
+        }
+        // dispatch normal events
+        $event = new PageEvent($page, $page->url());
+        $this->leafcutter->events()->dispatchEvent('onPageReady', $event);
+        $this->leafcutter->events()->dispatchEvent('onPageReturn', $event);
+        return $event->page();
     }
 
     protected function searchPath(string $path): string

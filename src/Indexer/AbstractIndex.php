@@ -3,18 +3,15 @@ namespace Leafcutter\Indexer;
 
 use Leafcutter\Leafcutter;
 use Leafcutter\Pages\Page;
-use Leafcutter\Pages\PageContentEvent;
 use Leafcutter\URL;
 use PDO;
 
 abstract class AbstractIndex
 {
-    const AUTO_CLEAR = true;
-
     protected $name;
     protected $pdo;
     protected $leafcutter;
-    
+
     abstract public function indexPage(Page $page);
 
     public function __construct(string $name, PDO $pdo, Leafcutter $leafcutter)
@@ -35,22 +32,20 @@ abstract class AbstractIndex
         $this->deleteByURL($page->url());
     }
 
-    public function onPageGenerateContent_finalize(PageContentEvent $event)
+    public function onPageContentGenerated(Page $page)
     {
-        if ($event->page()->status() == 200) {
-            if (static::AUTO_CLEAR) {
-                $this->removePage($event->page());
-            }
-            $this->indexPage($event->page());
+        if ($page->status() == 200) {
+            $this->indexPage($page);
         }
     }
 
-    public static function normalizeURL($url): string {
+    public static function normalizeURL($url): string
+    {
         if ($url instanceof URL) {
             return $url->siteFullPath() . $url->queryString();
-        }elseif (is_string($url)) {
+        } elseif (is_string($url)) {
             return $url;
-        }else {
+        } else {
             throw new \Exception("Malformed URL passed to Index", 1);
         }
     }
@@ -59,7 +54,7 @@ abstract class AbstractIndex
     {
         $url = static::normalizeURL($url);
         return $this->query(
-            'SELECT * FROM "' . $this->name . '" WHERE url = :url;',
+            'SELECT * FROM "' . $this->name . '" WHERE url = :url ORDER BY ' . $this->order() . ';',
             [':url' => $url]
         );
     }
@@ -67,9 +62,43 @@ abstract class AbstractIndex
     public function getByValue(string $value): array
     {
         return $this->query(
-            'SELECT * FROM "' . $this->name . '" WHERE value = :value;',
+            'SELECT * FROM "' . $this->name . '" WHERE value = :value ORDER BY ' . $this->order() . ';',
             [':value' => $value]
         );
+    }
+
+    public function listValues(): array
+    {
+        $result = $this->pdo->query('SELECT value, count(*) as `count` FROM "' . $this->name . '" GROUP BY value ORDER BY ' . $this->listOrder() . ';');
+        $result = array_map(
+            function ($e) {
+                return new IndexValue($e['value'], $e['count'], $this);
+            },
+            $result->fetchAll(PDO::FETCH_ASSOC)
+        );
+        return $result;
+    }
+
+    public function listURLs(): array
+    {
+        $result = $this->pdo->query('SELECT url, count(*) as `count` FROM "' . $this->name . '" GROUP BY url ORDER BY ' . $this->listOrder() . ';');
+        $result = array_map(
+            function ($e) {
+                return new IndexURL($e['url'], $e['count'], $this);
+            },
+            $result->fetchAll(PDO::FETCH_ASSOC)
+        );
+        return $result;
+    }
+
+    protected function order()
+    {
+        return '`sort` ASC';
+    }
+
+    protected function listOrder()
+    {
+        return '`count` DESC, `sort` ASC';
     }
 
     public function deleteByURL($url): array
@@ -89,9 +118,9 @@ abstract class AbstractIndex
         );
     }
 
-    public function save($url, string $value, array $data = []): IndexItem
+    public function save($url, string $value, string $sort = '', array $data = []): IndexItem
     {
-        $item = $this->item($url, $value, $data);
+        $item = $this->item($url, $value, $sort, $data);
         $item->save();
         return $item;
     }
@@ -118,12 +147,13 @@ abstract class AbstractIndex
             );
         } else {
             $s = $this->pdo->prepare(
-                'INSERT INTO "' . $this->name . '" (url,value,data) VALUES (:url,:value,:data);'
+                'INSERT INTO "' . $this->name . '" (url,value,sort,data) VALUES (:url,:value,:sort,:data);'
             );
         }
         return !!$s->execute([
             ':url' => $item->urlString(),
             ':value' => $item->value(),
+            ':sort' => $item->sort(),
             ':data' => json_encode($item->data()),
         ]);
     }
@@ -146,10 +176,10 @@ abstract class AbstractIndex
         }
     }
 
-    public function item($url, string $value, array $data = []): IndexItem
+    public function item($url, string $value, string $sort = "", array $data = []): IndexItem
     {
         $url = static::normalizeURL($url);
-        return new IndexItem($url, $value, $data, $this);
+        return new IndexItem($url, $value, $sort, $data, $this);
     }
 
     public function create()
@@ -161,6 +191,7 @@ abstract class AbstractIndex
         //create indexes
         $this->pdo->exec('CREATE INDEX "url_idx" ON "' . $this->name . '" ("url");');
         $this->pdo->exec('CREATE INDEX "value_idx" ON "' . $this->name . '" ("value");');
+        $this->pdo->exec('CREATE INDEX "sort_idx" ON "' . $this->name . '" ("sort");');
     }
 
     protected function query($sql, $params): array
@@ -169,7 +200,7 @@ abstract class AbstractIndex
         if ($s && $s->execute($params)) {
             return array_map(
                 function ($e) {
-                    return $this->item($e['url'], $e['value'], json_decode($e['data'], true));
+                    return $this->item($e['url'], $e['value'], $e['sort'], json_decode($e['data'], true));
                 },
                 $s->fetchAll(PDO::FETCH_ASSOC)
             );
@@ -184,6 +215,7 @@ abstract class AbstractIndex
 CREATE TABLE "$name" (
 	"url"	TEXT NOT NULL,
 	"value"	TEXT NOT NULL,
+	"sort"	TEXT NOT NULL,
 	"data"	TEXT NOT NULL,
 	PRIMARY KEY("url","value")
 );

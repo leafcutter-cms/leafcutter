@@ -18,8 +18,8 @@ theme:
     padding: 1.5rem
     font-size: 1rem
     font-scaler: 1.2
-    heading-font-scaler: 1.2
-    heading-scale: 1.2
+    heading-font-scaler: 1.25
+    heading-scale: 0.9
     line-height: 1.5em
     line-height-loose: 1.8em
     line-height-tight: 1.2em

@@ -5,7 +5,7 @@ use Leafcutter\Leafcutter;
 use Leafcutter\Pages\PageContentEvent;
 
 use Leafcutter\Response;
-
+use Leafcutter\URL;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
@@ -66,7 +66,7 @@ class TemplateProvider
         $provider->addFilter(
             'link',
             function ($item) {
-                if (\is_string($item)) {
+                if (\is_string($item) || $item instanceof URL) {
                     $item = $this->leafcutter->find($item);
                     if (!$item) {
                         return '[link not found]';

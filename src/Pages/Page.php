@@ -187,6 +187,10 @@ class Page implements PageInterface
                 );
             }
             $this->generatedContent = $event->content();
+            Leafcutter::get()->events()->dispatchEvent(
+                'onPageContentGenerated',
+                $this
+            );
             URLFactory::endContext();
         }
         return $this->generatedContent;
@@ -206,6 +210,9 @@ class Page implements PageInterface
 
     public function parent(): ?PageInterface
     {
+        if ($this->status() != 200) {
+            return null;
+        }
         return $this->parent ?? Leafcutter::get()->pages()->parent($this->url());
     }
 

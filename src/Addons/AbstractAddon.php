@@ -28,8 +28,8 @@ abstract class AbstractAddon implements AddonInterface
         return static::DEFAULT_CONFIG;
     }
 
-    public function config(string $key)
+    public function config(string $key, $value = null)
     {
-        return $this->leafcutter->config("addons.config." . $this->name() . ".$key");
+        return $this->leafcutter->config("addons.config." . $this->name() . ".$key", $value);
     }
 }
