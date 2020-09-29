@@ -298,7 +298,7 @@ class ThemeProvider
                     if ($e['media'] != 'library' && $this->inlined + $e['source']->size() <= $this->leafcutter->config('theme.css.max_inlined')) {
                         $this->inlined += $e['source']->size();
                         $e = '<style type="text/css"' . $media . '>' . PHP_EOL
-                        . $e['source']->content()
+                            . $e['source']->content()
                             . PHP_EOL . "</style>";
                         return;
                     }
