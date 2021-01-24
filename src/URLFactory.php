@@ -33,8 +33,8 @@ class URLFactory
         $actual = $actualCmp = static::currentActual();
         // strip scheme if not needed
         if (!$useScheme) {
-            $currentCmp = preg_replace('/^https?:/', ':', $current);
-            $actualCmp = preg_replace('/^https?:/', ':', $actual);
+            $currentCmp = preg_replace('/^https?:/', '', $current);
+            $actualCmp = preg_replace('/^https?:/', '', $actual);
         }
         // do comparison
         if ($currentCmp !== $actualCmp) {

@@ -342,6 +342,9 @@ class URL
      */
     public function schemeString(): string
     {
+        if ($this->scheme() == '') {
+            return '//';
+        }
         return $this->scheme() . '://';
     }
 
@@ -364,7 +367,9 @@ class URL
      */
     public function portString(): string
     {
-        if ($this->scheme() === 'https' && $this->port() !== 443) {
+        if ($this->scheme() == '' && $this->port() !== 443 && $this->port() !== 80) {
+            return '';
+        } elseif ($this->scheme() === 'https' && $this->port() !== 443) {
             return ':' . $this->port();
         } elseif ($this->scheme() === 'http' && $this->port() !== 80) {
             return ':' . $this->port();
@@ -414,18 +419,13 @@ class URL
     }
 
     /**
-     * Get the URL scheme (http or https)
+     * Get the URL scheme (empty, http or https)
      *
      * @return string
      */
     public function scheme(): string
     {
-        if (!$this->scheme) {
-            if ($site = URLFactory::site()) {
-                return $site->scheme();
-            }
-        }
-        return $this->scheme ?? 'http';
+        return $this->scheme ?? '';
     }
 
     /**
