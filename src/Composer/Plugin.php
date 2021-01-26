@@ -64,7 +64,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         $packageData[] = self::getThisPackageData();
         $addons = [];
         foreach ($packageData as $p) {
-            if (@$this->found[$p['name']]) {
+            if (!isset($p['name']) || @$this->found[$p['name']]) {
                 continue;
             }
             $this->found[$p['name']] = true;
