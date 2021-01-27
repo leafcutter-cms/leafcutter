@@ -1,5 +1,6 @@
-site:
-  url: 'http://local.test/leafcutter/demo/'
+# Site URL can generally be left auto-detected
+# site:
+#   url: 'http://local.test/leafcutter/demo/'
 
 directories:
   web: ${directories.base}

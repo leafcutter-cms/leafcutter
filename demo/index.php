@@ -14,6 +14,15 @@ $config['directories.base'] = __DIR__;
 $config->readDir(__DIR__ . '/config/', null, true);
 $config->readFile(__DIR__ . '/config/env.yaml', null, true);
 
+//attempt to guess URL
+if (!$config['site.url']) {
+    $url = new URL('/');
+    $url->setHost($_SERVER['HTTP_HOST']);
+    $url->setPath(preg_replace('/index\.php$/','',$_SERVER['SCRIPT_NAME']));
+    $url->setPort($_SERVER['SERVER_PORT']);
+    $config['site.url'] = $url->__toString();
+}
+
 //initialize logger
 $logger = new Logger('leafcutter');
 $logger->pushHandler(
