@@ -147,7 +147,7 @@ class EventProvider
             }
             return get_class($subject);
         }
-        if (is_bool($subject)) {
+        if (is_bool($subject) || is_array($subject)) {
             return serialize($subject);
         }
         return "$subject";
