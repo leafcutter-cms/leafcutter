@@ -224,8 +224,9 @@ class DOMProvider
             }
         }
         //fix self-closing tags that aren't actually allowed to self-close in HTML
-        $html = preg_replace('@(<(a|script|noscript|table|iframe|noframes|canvas|style|source)[^>]*)/>@ims', '$1></$2>', $html);
-
+        $html = preg_replace('@(<(a|script|noscript|table|iframe|noframes|canvas|style)[^>]*)/>@ims', '$1></$2>', $html);
+        //fix non-self-closing tags that are supposed to self-close
+        $html = preg_replace('@(<(source)[^>]*)></\2>@ims', '$1 />', $html);
         // return after passing through another hook
         return $this->leafcutter->events()->dispatchAll('onDOMReady', $html);
     }
