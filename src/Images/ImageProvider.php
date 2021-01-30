@@ -12,7 +12,7 @@ use Leafcutter\URL;
 class ImageProvider
 {
     const OUTPUT_FORMATS = [
-        'jpg', 'gif', 'png', 'wbmp', 'xbm', 'webp', 'bmp', 'ico',
+        'jpg', 'jpeg', 'gif', 'png', 'wbmp', 'xbm', 'webp', 'bmp', 'ico',
     ];
     const INPUT_FORMATS = [
         'jpg', 'jpeg', 'gif', 'png', 'wbmp', 'xbm', 'webp', 'bmp',
