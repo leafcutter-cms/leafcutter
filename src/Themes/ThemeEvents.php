@@ -189,6 +189,7 @@ class ThemeEvents
             },
             $response->content()
         ));
+        $packages = array_unique($packages);
         // load all packages
         foreach (array_unique($packages) as $name) {
             $this->leafcutter->theme()->activate($name);
