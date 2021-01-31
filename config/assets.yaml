@@ -17,3 +17,8 @@ assets:
     ttf: true
     eot: true
     svg: true
+    mp3: true
+    ogg: true
+    ogv: true
+    mp4: true
+    mkv: true
