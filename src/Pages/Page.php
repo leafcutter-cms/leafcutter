@@ -15,6 +15,7 @@ class Page implements PageInterface
     protected $url;
     protected $meta;
     protected $dynamic = false;
+    protected $public = true;
     protected $parent;
     protected $status = 200;
 
@@ -30,6 +31,37 @@ class Page implements PageInterface
             'date.generated' => time(),
             'unlisted' => false,
         ]);
+    }
+
+    public function headers(): array
+    {
+        return [
+            'Cache-Control' => $this->cacheControl()
+        ];
+    }
+
+    protected function cacheControl(): string
+    {
+        $items = [];
+        $lc = Leafcutter::get();
+        if ($this->public()) {
+            $items[] = 'public';
+            if ($this->dynamic()) {
+                $items[] = 'max-age='.$lc->config('cache.proxy.dynamic.ideal');
+                $items[] = 'max-stale='.$lc->config('cache.proxy.dynamic.stale');
+                $items[] = 'stale-if-error='.$lc->config('cache.proxy.static.stale');
+                $items[] = 'stale-while-revalidate='.$lc->config('cache.proxy.static.stale');
+            }else {
+                $items[] = 'max-age='.$lc->config('cache.proxy.static.ideal');
+                $items[] = 'max-stale='.$lc->config('cache.proxy.static.stale');
+                $items[] = 'stale-if-error='.$lc->config('cache.proxy.static.stale');
+                $items[] = 'stale-while-revalidate='.$lc->config('cache.proxy.static.stale');
+            }
+        }else {
+            $items[] = 'no-store';
+            $items[] = 'max-age='.$lc->config('cache.proxy.private.ideal');
+        }
+        return implode(', ',$items);
     }
 
     public function status(): int
@@ -50,6 +82,16 @@ class Page implements PageInterface
     public function setDynamic(bool $dynamic)
     {
         $this->dynamic = $dynamic;
+    }
+
+    public function public(): bool
+    {
+        return $this->public;
+    }
+
+    public function setPublic(bool $public)
+    {
+        $this->public = $public;
     }
 
     public function template(): ?string

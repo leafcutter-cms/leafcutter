@@ -4,6 +4,15 @@ cache:
     content: 60
     output: 60
     assets: 3600
+  proxy:
+    dynamic:
+      ideal: 1
+      stale: 86400
+    static: 
+      ideal: 300
+      stale: 7776000
+    private: 
+      ideal: 0
   driver: ephemeral
   driver_filesystem_config:
     encoder: Native

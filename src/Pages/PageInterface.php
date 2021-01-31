@@ -21,4 +21,7 @@ interface PageInterface
     public function setStatus(int $status);
     public function dynamic(): bool;
     public function setDynamic(bool $dynamic);
+    public function public(): bool;
+    public function setPublic(bool $public);
+    public function headers(): array;
 }

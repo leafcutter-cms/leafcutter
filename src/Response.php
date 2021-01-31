@@ -32,7 +32,13 @@ class Response
         foreach ($this->headers as $key => $value) {
             header("$key: $value");
         }
+        if (method_exists($this->source, 'headers')) {
+            foreach ($this->source->headers() as $key => $value) {
+                header("$key: $value");
+            }
+        }
         header('content-type: ' . $this->mime . '; charset=' . $this->charset);
+        header('Etag: '.md5($this->content()));
     }
 
     public function doAfter(callable $fn)
