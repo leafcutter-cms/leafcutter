@@ -22,6 +22,11 @@ class AssetProvider
         $this->leafcutter->dom()->prepareLinkAttribute($event, 'href', false);
     }
 
+    public function onDOMElement_source(DOMEvent $event)
+    {
+        $this->leafcutter->dom()->prepareLinkAttribute($event, 'src', false);
+    }
+
     public function onDOMElement_script(DOMEvent $event)
     {
         $this->leafcutter->dom()->prepareLinkAttribute($event, 'src', false);
@@ -137,7 +142,7 @@ class AssetProvider
 
     protected function hashPath(AssetInterface $asset): string
     {
-        $path = '/'.preg_replace("/^(.{1})(.{2})(.{2})/", "$1/$2/$3/", $asset->hash()) . '/';
+        $path = '/' . preg_replace("/^(.{1})(.{2})(.{2})/", "$1/$2/$3/", $asset->hash()) . '/';
         return $path;
     }
 
